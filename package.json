@@ -54,6 +54,10 @@
       {
         "command": "imagelint.applyFix",
         "title": "ImageLint: Apply Fix (Internal)"
+      },
+      {
+        "command": "imagelint.ignoreImage",
+        "title": "ImageLint: Ignore Image"
       }
     ],
     "configuration": {
@@ -113,7 +117,7 @@
   "scripts": {
     "build": "node esbuild.js",
     "watch": "node esbuild.js --watch",
-    "lint": "eslint src --ext .ts",
+    "lint": "eslint src",
     "test": "npm run build && npm run compile-tests && node ./out/runTest.js",
     "compile-tests": "tsc -p ./test/tsconfig.json"
   },

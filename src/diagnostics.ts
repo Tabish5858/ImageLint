@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import { ImageIssue } from './types';
 import { escapeRegExp, toPosixPath } from './utils';
 
-const CODE_GLOB = '**/*.{js,jsx,ts,tsx,html,css,scss,vue,svelte,mdx}';
+const CODE_GLOB = '**/*.{js,jsx,ts,tsx,html,css,scss,vue,svelte,md,mdx}';
 
 function offsetToPosition(text: string, offset: number): vscode.Position {
   const upToOffset = text.slice(0, offset);

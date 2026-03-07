@@ -8,6 +8,15 @@ fixAllBtn.addEventListener('click', () => {
   vscode.postMessage({ type: 'fixAll' });
 });
 
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 window.addEventListener('message', (event) => {
   const message = event.data;
   if (message.type !== 'reportData') {
@@ -20,12 +29,12 @@ window.addEventListener('message', (event) => {
   for (const row of message.rows) {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${row.path}</td>
-      <td>${row.format}</td>
-      <td>${row.size}</td>
-      <td>${row.estimated}</td>
-      <td>${row.savingsPct}%</td>
-      <td>${row.suggestions}</td>
+      <td>${escapeHtml(row.path)}</td>
+      <td>${escapeHtml(row.format)}</td>
+      <td>${escapeHtml(row.size)}</td>
+      <td>${escapeHtml(row.estimated)}</td>
+      <td>${escapeHtml(row.savingsPct)}%</td>
+      <td>${escapeHtml(row.suggestions)}</td>
     `;
     bodyEl.appendChild(tr);
   }
