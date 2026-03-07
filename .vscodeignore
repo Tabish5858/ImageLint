@@ -1,0 +1,7 @@
+src/**
+test/**
+.github/**
+.vscode/**
+.eslintrc.cjs
+.prettierrc
+README-dev.md

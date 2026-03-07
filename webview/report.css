@@ -1,0 +1,141 @@
+:root {
+  --bg: #f5f8ec;
+  --surface: #ffffff;
+  --ink: #1e2a1f;
+  --muted: #546356;
+  --accent: #0f8f5f;
+  --accent-2: #f6a623;
+  --line: #d7e3d2;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'IBM Plex Sans', 'Segoe UI', sans-serif;
+  color: var(--ink);
+  background: radial-gradient(circle at top right, #e5f6dc 0%, var(--bg) 45%, #eaf2ff 100%);
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.bg-shape {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(40px);
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.bg-shape-a {
+  width: 320px;
+  height: 320px;
+  background: #8ee38f;
+  top: -90px;
+  right: -70px;
+}
+
+.bg-shape-b {
+  width: 260px;
+  height: 260px;
+  background: #ffd47c;
+  bottom: -80px;
+  left: -40px;
+}
+
+header {
+  padding: 16px;
+  display: grid;
+  gap: 8px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+#summary {
+  margin: 0;
+  color: var(--muted);
+}
+
+button {
+  justify-self: start;
+  background: linear-gradient(135deg, var(--accent) 0%, #2ca477 100%);
+  color: #fff;
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+main {
+  padding: 0 16px 16px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 10px;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.9rem;
+}
+
+th {
+  background: #edf6e7;
+  font-weight: 700;
+}
+
+tr {
+  animation: rise 240ms ease;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 800px) {
+  table,
+  thead,
+  tbody,
+  tr,
+  th,
+  td {
+    display: block;
+  }
+
+  thead {
+    display: none;
+  }
+
+  tr {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    margin-bottom: 10px;
+    background: var(--surface);
+  }
+
+  td {
+    border-bottom: 1px dashed var(--line);
+  }
+}

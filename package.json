@@ -1,0 +1,140 @@
+{
+  "name": "imagelint",
+  "displayName": "ImageLint",
+  "description": "ESLint for images: detect, report, and fix unoptimized images in your workspace.",
+  "version": "0.1.0",
+  "publisher": "tabishbinishfaq",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Linters",
+    "Other"
+  ],
+  "keywords": [
+    "image",
+    "optimize",
+    "compression",
+    "lighthouse",
+    "webp",
+    "avif",
+    "performance"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "imagelint.scanWorkspace",
+        "title": "ImageLint: Scan Workspace"
+      },
+      {
+        "command": "imagelint.optimizeFile",
+        "title": "ImageLint: Optimize Active Image"
+      },
+      {
+        "command": "imagelint.optimizeAll",
+        "title": "ImageLint: Optimize All Flagged Images"
+      },
+      {
+        "command": "imagelint.showReport",
+        "title": "ImageLint: Show Audit Report"
+      },
+      {
+        "command": "imagelint.clearDiagnostics",
+        "title": "ImageLint: Clear Diagnostics"
+      },
+      {
+        "command": "imagelint.toggleEnabled",
+        "title": "ImageLint: Toggle Enabled"
+      },
+      {
+        "command": "imagelint.applyFix",
+        "title": "ImageLint: Apply Fix (Internal)"
+      }
+    ],
+    "configuration": {
+      "title": "ImageLint",
+      "properties": {
+        "imagelint.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable or disable ImageLint."
+        },
+        "imagelint.sizeThreshold": {
+          "type": "number",
+          "default": 100,
+          "minimum": 1,
+          "description": "Warn when an image exceeds this size (in KB)."
+        },
+        "imagelint.autoConvertToWebP": {
+          "type": "boolean",
+          "default": true,
+          "description": "Suggest WebP conversion for non-modern formats."
+        },
+        "imagelint.preferAVIF": {
+          "type": "boolean",
+          "default": false,
+          "description": "Prefer AVIF over WebP when suggesting conversions."
+        },
+        "imagelint.scanOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Run image scan when files are saved."
+        },
+        "imagelint.excludePatterns": {
+          "type": "array",
+          "default": [
+            "**/node_modules/**"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "description": "Glob patterns to ignore during scans."
+        },
+        "imagelint.showStatusBar": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show scan summary in the VS Code status bar."
+        },
+        "imagelint.compressionQuality": {
+          "type": "number",
+          "default": 80,
+          "minimum": 1,
+          "maximum": 100,
+          "description": "Lossy compression quality (1-100)."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "lint": "eslint src --ext .ts",
+    "test": "npm run build && npm run compile-tests && node ./out/runTest.js",
+    "compile-tests": "tsc -p ./test/tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^22.13.10",
+    "@types/vscode": "^1.75.0",
+    "@typescript-eslint/eslint-plugin": "^8.25.0",
+    "@typescript-eslint/parser": "^8.25.0",
+    "@vscode/test-electron": "^2.4.1",
+    "esbuild": "^0.25.0",
+    "eslint": "^9.21.0",
+    "eslint-config-prettier": "^10.1.1",
+    "glob": "^11.0.1",
+    "mocha": "^11.1.0",
+    "prettier": "^3.5.2",
+    "typescript": "^5.8.2",
+    "vscode-test": "^1.6.1"
+  },
+  "dependencies": {
+    "sharp": "^0.33.5",
+    "svgo": "^3.3.2"
+  }
+}
