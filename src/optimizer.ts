@@ -42,7 +42,19 @@ async function optimizeSvgInPlace(filePath: string): Promise<void> {
 
 async function optimizeGifInPlace(filePath: string): Promise<void> {
   const tmpPath = `${filePath}.tmp.gif`;
-  await execFileAsync('gifsicle', ['-O3', filePath, '-o', tmpPath]);
+  try {
+    await execFileAsync('gifsicle', ['-O3', filePath, '-o', tmpPath]);
+  } catch (err) {
+    const isNotFound =
+      err instanceof Error &&
+      ('code' in err ? (err as NodeJS.ErrnoException).code === 'ENOENT' : false);
+    if (isNotFound) {
+      throw new Error(
+        'gifsicle is not installed or not found in PATH. Install it via your package manager (e.g. "brew install gifsicle" or "apt-get install gifsicle") and reload the window.'
+      );
+    }
+    throw err;
+  }
   await fs.rename(tmpPath, filePath);
 }
 

@@ -10,7 +10,7 @@ import { ReportPanel } from './report';
 import { scanWorkspaceForImages } from './scanner';
 import { StatusBarController } from './statusBar';
 import { ImageIssue, OptimizationAction, ScanSummary } from './types';
-import { formatBytes } from './utils';
+import { escapeRegExp, formatBytes } from './utils';
 import { ScanWatcher } from './watcher';
 
 let diagnosticsManager: DiagnosticsManager;
@@ -60,12 +60,23 @@ async function updateReferences(oldRelativePath: string, newRelativePath: string
   const oldBase = path.basename(oldRelativePath);
   const newBase = path.basename(newRelativePath);
 
+  // Single combined regex handles:
+  //   1. Full relative path (with optional leading ./ or .\): images/logo.png OR ./images/logo.png
+  //   2. Standalone basename only when NOT preceded by a path separator,
+  //      which avoids corrupting references to other files with the same name in different directories.
+  const fullPathPattern = `(?:\\.[/\\\\])?${escapeRegExp(oldRelativePath)}`;
+  const standaloneBasePattern = `(?<![/\\\\])${escapeRegExp(oldBase)}`;
+  const combined = new RegExp(`${fullPathPattern}|${standaloneBasePattern}`, 'g');
+
   await Promise.all(
     files.map(async (uri: vscode.Uri) => {
       const text = await fs.readFile(uri.fsPath, 'utf8');
-      const next = text
-        .replaceAll(oldRelativePath, newRelativePath)
-        .replaceAll(oldBase, newBase);
+      const next = text.replace(combined, (match) => {
+        if (match.endsWith(oldRelativePath)) {
+          return match.replace(oldRelativePath, newRelativePath);
+        }
+        return newBase;
+      });
       if (next !== text) {
         await fs.writeFile(uri.fsPath, next, 'utf8');
       }

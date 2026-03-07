@@ -1,3 +1,4 @@
+import * as crypto from 'node:crypto';
 import * as fs from 'node:fs/promises';
 import * as vscode from 'vscode';
 import { ImageIssue } from './types';
@@ -82,6 +83,6 @@ export class ReportPanel {
   }
 
   private getNonce(): string {
-    return Math.random().toString(36).slice(2);
+    return crypto.randomBytes(16).toString('hex');
   }
 }
