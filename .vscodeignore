@@ -19,42 +19,8 @@ ForVideo/**
 !webview/**/*.ts
 **/*.map
 
-# Node modules — include ONLY runtime-essential files
+# All dev node_modules excluded — sharp runtime deps live in dist/node_modules/
 node_modules/**
-
-# sharp JS runtime (no C++ source, no .d.ts, no install scripts)
-!node_modules/sharp/package.json
-!node_modules/sharp/lib/*.js
-
-# Native prebuilt binaries (platform-specific)
-!node_modules/@img/*/package.json
-!node_modules/@img/*/lib/**
-!node_modules/@img/*/versions.json
-
-# sharp transitive JS deps (package.json + runtime JS only)
-!node_modules/detect-libc/package.json
-!node_modules/detect-libc/lib/**
-!node_modules/semver/package.json
-!node_modules/semver/index.js
-!node_modules/semver/preload.js
-!node_modules/semver/classes/**
-!node_modules/semver/functions/**
-!node_modules/semver/internal/**
-!node_modules/semver/ranges/**
-!node_modules/color/package.json
-!node_modules/color/index.js
-!node_modules/color-convert/package.json
-!node_modules/color-convert/conversions.js
-!node_modules/color-convert/index.js
-!node_modules/color-convert/route.js
-!node_modules/color-name/package.json
-!node_modules/color-name/index.js
-!node_modules/color-string/package.json
-!node_modules/color-string/index.js
-!node_modules/simple-swizzle/package.json
-!node_modules/simple-swizzle/index.js
-!node_modules/is-arrayish/package.json
-!node_modules/is-arrayish/index.js
 
 # Ensure these are included
 !dist/**
