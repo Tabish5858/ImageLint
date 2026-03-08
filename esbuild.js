@@ -7,7 +7,7 @@ const baseConfig = {
   bundle: true,
   platform: 'node',
   format: 'cjs',
-  sourcemap: true,
+  sourcemap: false,
   outfile: 'dist/extension.js',
   external: ['vscode', 'sharp'],
   logLevel: 'info',
