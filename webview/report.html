@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="Content-Security-Policy"
-    content="default-src 'none'; style-src {{styleUri}}; script-src 'nonce-{{nonce}}';" />
+    content="default-src 'none'; style-src {{cspSource}} 'unsafe-inline'; script-src 'nonce-{{nonce}}';" />
   <link rel="stylesheet" href="{{styleUri}}" />
   <title>ImageLint Report</title>
 </head>
@@ -43,7 +43,7 @@
   </header>
 
   <!-- Stats -->
-  <section class="stats" id="statsSection" style="display:none">
+  <section class="stats hidden" id="statsSection">
     <div class="stat-card stat-issues">
       <div class="stat-icon-wrap">
         <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor"><path d="M7.56 1h.88l6.54 12.26-.44.74H1.44l-.42-.74L7.56 1zm.44 1.7L2.84 13H13.16L8 2.7zM8.5 10V11h-1v-1h1zm0-1h-1V6h1v3z"/></svg>
@@ -75,19 +75,19 @@
   </section>
 
   <!-- Progress -->
-  <section class="opt-progress" id="optProgress" style="display:none">
+  <section class="opt-progress hidden" id="optProgress">
     <div class="opt-progress-head">
       <span>Optimization Potential</span>
       <span class="opt-progress-pct" id="optPct">0%</span>
     </div>
     <div class="opt-progress-track">
-      <div class="opt-progress-fill" id="optFill" style="width:0%"></div>
+      <div class="opt-progress-fill" id="optFill"></div>
     </div>
   </section>
 
   <!-- Table area -->
   <main>
-    <div class="table-area" id="tableArea" style="display:none">
+    <div class="table-area hidden" id="tableArea">
       <div class="toolbar">
         <span class="toolbar-count" id="toolbarCount">0 images</span>
         <div class="toolbar-controls">
@@ -123,7 +123,7 @@
     </div>
 
     <!-- Empty state -->
-    <div class="empty" id="emptyState" style="display:none">
+    <div class="empty hidden" id="emptyState">
       <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
         <circle cx="36" cy="36" r="34" stroke="var(--success)" stroke-width="2" opacity="0.2"/>
         <circle cx="36" cy="36" r="22" stroke="var(--success)" stroke-width="1.5" opacity="0.1"/>
@@ -141,7 +141,7 @@
     </div>
   </main>
 
-  <footer class="footer" id="footer" style="display:none">
+  <footer class="footer hidden" id="footer">
     ImageLint &mdash; optimize your assets, ship faster.
   </footer>
 

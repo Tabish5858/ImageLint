@@ -65,9 +65,9 @@ if (emptyRescanBtn) {
 
 function startRescan() {
   rescanBtn.disabled = true;
-  loadingState.style.display = 'flex';
-  tableArea.style.display = 'none';
-  emptyState.style.display = 'none';
+  loadingState.classList.remove('hidden');
+  tableArea.classList.add('hidden');
+  emptyState.classList.add('hidden');
   vscode.postMessage({ type: 'rescan' });
 }
 
@@ -121,21 +121,30 @@ function renderTable() {
     var fl = r.format.toLowerCase();
     var sev = r.savingsPct >= 40 ? 'err' : 'warn';
 
-    var acts =
-      '<button class="btn-ghost" data-action="compress" data-issue-id="' +
-      esc(r.id) +
-      '" title="Compress in place">Compress</button>';
+    var acts = '';
+    if (r.canCompress) {
+      acts +=
+        '<button class="act-btn act-btn-compress" data-action="compress" data-issue-id="' +
+        esc(r.id) +
+        '" title="Compress in current format">' +
+        '<svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M14 1H2L1 2v12l1 1h12l1-1V2l-1-1zm0 12H2V2h12v11zM4 6h8v1H4V6zm0 3h8v1H4V9z"/></svg>' +
+        'Compress</button>';
+    }
     if (r.canConvert) {
       acts +=
-        '<button class="btn-ghost btn-convert" data-action="convert-modern" data-issue-id="' +
+        '<button class="act-btn act-btn-webp" data-action="convert-modern" data-issue-id="' +
         esc(r.id) +
-        '" title="Convert to WebP">\u2192 WebP</button>';
+        '" title="Convert to WebP format">' +
+        '<svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1v3.6l3.1-1.8.5.9L8.5 5.5 12 7l-.5.9L8 6.1V10H7V6.1L3.5 7.9 3 7l3.5-1.5L3.4 3.7l.5-.9L7 4.6V1h1z"/></svg>' +
+        'WebP</button>';
     }
     if (r.canResize) {
       acts +=
-        '<button class="btn-ghost" data-action="resize" data-issue-id="' +
+        '<button class="act-btn act-btn-resize" data-action="resize" data-issue-id="' +
         esc(r.id) +
-        '" title="Resize to 1600px width">Resize</button>';
+        '" title="Resize to 1600px width">' +
+        '<svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M1.5 1h13l.5.5v13l-.5.5h-13l-.5-.5v-13l.5-.5zM2 14h12V2H2v12zm2.5-3.5l2-3 1.5 2 1-1.5 2.5 3h-7z"/></svg>' +
+        'Resize</button>';
     }
 
     tr.innerHTML =
@@ -175,14 +184,14 @@ window.addEventListener('message', function (event) {
   var msg = event.data;
   if (msg.type !== 'reportData') return;
 
-  loadingState.style.display = 'none';
+  loadingState.classList.add('hidden');
   rescanBtn.disabled = false;
   allRows = msg.rows;
 
   var s = msg.summary;
 
   /* Stats */
-  statsSection.style.display = 'grid';
+  statsSection.classList.remove('hidden');
   issueCountEl.textContent = s.count;
   totalSavingsEl.textContent = s.totalSavings;
   totalSizeEl.textContent = fmtBytes(s.totalOriginalBytes);
@@ -196,11 +205,11 @@ window.addEventListener('message', function (event) {
   /* Progress */
   if (s.totalOriginalBytes > 0 && s.count > 0) {
     var pct = Math.round((s.totalSavingsBytes / s.totalOriginalBytes) * 100);
-    optProgress.style.display = 'block';
+    optProgress.classList.remove('hidden');
     optFill.style.width = pct + '%';
     optPct.textContent = pct + '%';
   } else {
-    optProgress.style.display = 'none';
+    optProgress.classList.add('hidden');
   }
 
   /* Filter dropdown */
@@ -226,14 +235,14 @@ window.addEventListener('message', function (event) {
     '<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M14.431 3.323l-8.47 10-4.39-3.391.943-1.219 3.25 2.512 7.53-8.9 1.137.998z"/></svg> Fix All Issues';
 
   if (allRows.length === 0) {
-    tableArea.style.display = 'none';
-    emptyState.style.display = 'flex';
-    footerEl.style.display = 'block';
+    tableArea.classList.add('hidden');
+    emptyState.classList.remove('hidden');
+    footerEl.classList.remove('hidden');
     return;
   }
 
-  emptyState.style.display = 'none';
-  tableArea.style.display = 'block';
-  footerEl.style.display = 'block';
+  emptyState.classList.add('hidden');
+  tableArea.classList.remove('hidden');
+  footerEl.classList.remove('hidden');
   renderTable();
 });

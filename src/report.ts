@@ -19,6 +19,7 @@ interface ReportRow {
   estimated: string;
   savingsPct: number;
   suggestions: string[];
+  canCompress: boolean;
   canConvert: boolean;
   canResize: boolean;
 }
@@ -79,6 +80,7 @@ export class ReportPanel {
       estimated: formatBytes(issue.estimatedBytes),
       savingsPct: issue.savingsPct,
       suggestions: issue.suggestions,
+      canCompress: issue.suggestions.some((s) => s === 'compress'),
       canConvert:
         !modernFormats.has(issue.format.toLowerCase()) &&
         !['svg', 'gif'].includes(issue.format.toLowerCase()),
@@ -112,12 +114,15 @@ export class ReportPanel {
       vscode.Uri.joinPath(this.extensionUri, 'webview', 'report.js')
     );
 
+    const nonce = this.getNonce();
+    const cspSource = webview.cspSource;
     const template = await fs.readFile(htmlPath.fsPath, 'utf8');
 
     return template
+      .replace(/\{\{cspSource\}\}/g, cspSource)
       .replace(/\{\{styleUri\}\}/g, cssUri.toString())
       .replace(/\{\{scriptUri\}\}/g, jsUri.toString())
-      .replace(/\{\{nonce\}\}/g, this.getNonce());
+      .replace(/\{\{nonce\}\}/g, nonce);
   }
 
   private getNonce(): string {

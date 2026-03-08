@@ -1,24 +1,26 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
-import * as vscode from 'vscode';
 import sharp from 'sharp';
+import * as vscode from 'vscode';
 import { ImageLintConfig } from './config';
 import { ImageIssue } from './types';
 import { createIssueId, estimateSavingsPct, toPosixPath } from './utils';
 
 function estimateOptimizedBytes(ext: string, bytes: number): number {
   const lower = ext.toLowerCase();
+  // Smaller files have diminishing compression returns
+  const smallFileAdjust = bytes < 10240 ? 0.92 : bytes < 51200 ? 0.8 : 1.0;
   if (lower === '.png') {
-    return Math.floor(bytes * 0.65);
+    return Math.floor(bytes * (1 - 0.35 * smallFileAdjust));
   }
   if (lower === '.jpg' || lower === '.jpeg') {
-    return Math.floor(bytes * 0.7);
+    return Math.floor(bytes * (1 - 0.3 * smallFileAdjust));
   }
   if (lower === '.gif') {
-    return Math.floor(bytes * 0.8);
+    return Math.floor(bytes * (1 - 0.2 * smallFileAdjust));
   }
   if (lower === '.svg') {
-    return Math.floor(bytes * 0.75);
+    return Math.floor(bytes * (1 - 0.25 * smallFileAdjust));
   }
   return Math.floor(bytes * 0.9);
 }
@@ -63,10 +65,18 @@ export async function analyzeImages(
 
     const estimatedBytes = estimateOptimizedBytes(ext, originalBytes);
     const savingsBytes = Math.max(0, originalBytes - estimatedBytes);
-    const relativePath = rootPath ? toPosixPath(path.relative(rootPath, uri.fsPath)) : path.basename(uri.fsPath);
+
+    // Skip images with minimal absolute savings (< 1 KB) — likely already optimized
+    if (savingsBytes < 1024 && !needsModernFormat && !likelyOversizedDimensions) {
+      continue;
+    }
+
+    const relativePath = rootPath
+      ? toPosixPath(path.relative(rootPath, uri.fsPath))
+      : path.basename(uri.fsPath);
 
     const suggestions: string[] = [];
-    if (isTooLarge) {
+    if (isTooLarge && savingsBytes >= 1024) {
       suggestions.push('compress');
     }
     if (needsModernFormat) {
@@ -74,6 +84,10 @@ export async function analyzeImages(
     }
     if (likelyOversizedDimensions) {
       suggestions.push('resize width to 1600px or less');
+    }
+
+    if (suggestions.length === 0) {
+      continue;
     }
 
     issues.push({
