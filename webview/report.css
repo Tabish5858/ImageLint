@@ -339,7 +339,14 @@ main {
 .table-scroll {
   border: 1px solid var(--surface-border);
   border-radius: var(--r-md);
-  overflow: hidden;
+  overflow: auto;
+  max-height: calc(100vh - 280px);
+}
+
+.table-scroll thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 table {

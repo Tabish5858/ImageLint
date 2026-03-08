@@ -14,7 +14,10 @@ tsconfig.json
 test.html
 ForVideo/**
 **/*.ts
+!webview/**/*.ts
 **/*.map
+
+# Node modules — include only sharp + its native runtime deps
 node_modules/**
 !node_modules/sharp/**
 !node_modules/@img/**
@@ -26,6 +29,26 @@ node_modules/**
 !node_modules/color-name/**
 !node_modules/simple-swizzle/**
 !node_modules/is-arrayish/**
+
+# Strip non-essential files from included deps
+node_modules/**/README.md
+node_modules/**/CHANGELOG.md
+node_modules/**/HISTORY.md
+node_modules/**/LICENSE
+node_modules/**/LICENSE.md
+node_modules/**/*.d.ts
+node_modules/**/*.d.mts
+node_modules/**/tsconfig.json
+node_modules/**/docs/**
+node_modules/**/test/**
+node_modules/**/tests/**
+node_modules/**/example/**
+node_modules/**/examples/**
+node_modules/**/.github/**
+node_modules/**/.eslintrc*
+node_modules/**/.prettierrc*
+
+# Ensure these are included
 !dist/**
 !webview/**
 !README.md

@@ -42,6 +42,12 @@ export async function analyzeImages(
 
   for (const uri of imageUris) {
     const ext = path.extname(uri.fsPath).toLowerCase();
+
+    // WebP and AVIF are already modern formats — never flag them
+    if (ext === '.webp' || ext === '.avif') {
+      continue;
+    }
+
     const stat = await fs.stat(uri.fsPath);
     const originalBytes = stat.size;
     let metadata: sharp.Metadata | undefined;
