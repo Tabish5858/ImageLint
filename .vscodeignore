@@ -11,9 +11,13 @@ ARCHITECTURE.md
 prompt.txt
 esbuild.js
 tsconfig.json
+test.html
+ForVideo/**
 **/*.ts
 **/*.map
 node_modules/**
+!node_modules/sharp/**
+!node_modules/@img/**
 !dist/**
 !webview/**
 !README.md

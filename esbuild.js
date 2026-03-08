@@ -9,7 +9,7 @@ const baseConfig = {
   format: 'cjs',
   sourcemap: true,
   outfile: 'dist/extension.js',
-  external: ['vscode'],
+  external: ['vscode', 'sharp'],
   logLevel: 'info',
   target: 'node20'
 };
