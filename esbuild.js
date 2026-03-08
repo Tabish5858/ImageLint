@@ -22,15 +22,28 @@ const baseConfig = {
 // so the VSIX ships a self-contained dist/ with no top-level node_modules.
 
 const SHARP_RUNTIME_DEPS = [
-  'sharp', 'detect-libc', 'semver',
-  'color', 'color-convert', 'color-name',
-  'color-string', 'simple-swizzle', 'is-arrayish'
+  'sharp',
+  'detect-libc',
+  'semver',
+  'color',
+  'color-convert',
+  'color-name',
+  'color-string',
+  'simple-swizzle',
+  'is-arrayish'
 ];
 
 const SKIP_PATTERN = /\.(md|d\.ts|d\.mts|cc|cpp|h|gyp|map)$|^(LICENSE|LICENCE)(\.txt)?$/i;
 const SKIP_DIRS = new Set([
-  'src', 'test', 'tests', 'docs', 'example', 'examples',
-  '.github', 'bin', 'install'
+  'src',
+  'test',
+  'tests',
+  'docs',
+  'example',
+  'examples',
+  '.github',
+  'bin',
+  'install'
 ]);
 
 function copyDirFiltered(src, dest) {
