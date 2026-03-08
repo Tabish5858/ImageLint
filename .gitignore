@@ -4,3 +4,4 @@ out/
 *.vsix
 coverage/
 .DS_Store
+prompt.txt

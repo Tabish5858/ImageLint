@@ -135,7 +135,7 @@
     "mocha": "^11.1.0",
     "prettier": "^3.5.2",
     "typescript": "^5.8.2",
-    "vscode-test": "^1.6.1"
+    "vscode-test": "^1.4.1"
   },
   "dependencies": {
     "sharp": "^0.33.5",
