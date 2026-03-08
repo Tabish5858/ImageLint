@@ -20,6 +20,7 @@ interface ReportRow {
   savingsPct: number;
   suggestions: string[];
   canConvert: boolean;
+  canResize: boolean;
 }
 
 export class ReportPanel {
@@ -80,7 +81,8 @@ export class ReportPanel {
       suggestions: issue.suggestions,
       canConvert:
         !modernFormats.has(issue.format.toLowerCase()) &&
-        !['svg', 'gif'].includes(issue.format.toLowerCase())
+        !['svg', 'gif'].includes(issue.format.toLowerCase()),
+      canResize: issue.suggestions.some((s) => s.includes('resize'))
     }));
 
     const formatCounts: Record<string, number> = {};

@@ -1,193 +1,239 @@
 const vscode = acquireVsCodeApi();
 
-/* ─── DOM refs ─── */
+/* --- DOM --- */
 const fixAllBtn = document.getElementById('fixAllBtn');
 const rescanBtn = document.getElementById('rescanBtn');
+const emptyRescanBtn = document.getElementById('emptyRescanBtn');
 const bodyEl = document.getElementById('reportBody');
-const tableContainer = document.getElementById('tableContainer');
+const tableArea = document.getElementById('tableArea');
 const emptyState = document.getElementById('emptyState');
 const loadingState = document.getElementById('loadingState');
-const savingsBarSection = document.getElementById('savingsBarSection');
-const savingsBarFill = document.getElementById('savingsBarFill');
-const savingsPctEl = document.getElementById('savingsPct');
-
+const statsSection = document.getElementById('statsSection');
+const optProgress = document.getElementById('optProgress');
+const optFill = document.getElementById('optFill');
+const optPct = document.getElementById('optPct');
 const issueCountEl = document.getElementById('issueCount');
 const totalSavingsEl = document.getElementById('totalSavings');
 const totalSizeEl = document.getElementById('totalSize');
 const formatBreakdownEl = document.getElementById('formatBreakdown');
+const toolbarCount = document.getElementById('toolbarCount');
+const sortSelect = document.getElementById('sortSelect');
+const filterSelect = document.getElementById('filterSelect');
+const footerEl = document.getElementById('footer');
 
-/* ─── Helpers ─── */
-function escapeHtml(value) {
-  return String(value)
+var allRows = [];
+
+/* --- Helpers --- */
+function esc(v) {
+  return String(v)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 }
-
-function formatBytesJs(bytes) {
-  if (bytes < 1024) {
-    return bytes + ' B';
-  }
-  if (bytes < 1048576) {
-    return (bytes / 1024).toFixed(1) + ' KB';
-  }
-  return (bytes / 1048576).toFixed(2) + ' MB';
+function fmtBytes(b) {
+  if (b < 1024) return b + ' B';
+  if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+  return (b / 1048576).toFixed(2) + ' MB';
+}
+function basename(p) {
+  var s = p.split('/');
+  return s[s.length - 1] || p;
+}
+function dirname(p) {
+  var s = p.split('/');
+  return s.length > 1 ? s.slice(0, -1).join('/') : '';
 }
 
-function fileName(filePath) {
-  const parts = filePath.split('/');
-  return parts[parts.length - 1] || filePath;
-}
-
-function dirPath(filePath) {
-  const parts = filePath.split('/');
-  if (parts.length <= 1) {
-    return '';
-  }
-  return parts.slice(0, -1).join('/');
-}
-
-function setLoading(on) {
-  loadingState.style.display = on ? 'flex' : 'none';
-}
-
-/* ─── Button handlers ─── */
-fixAllBtn.addEventListener('click', () => {
+/* --- Controls --- */
+fixAllBtn.addEventListener('click', function () {
   fixAllBtn.disabled = true;
-  fixAllBtn.textContent = 'Fixing…';
+  fixAllBtn.textContent = 'Fixing...';
   vscode.postMessage({ type: 'fixAll' });
 });
 
-rescanBtn.addEventListener('click', () => {
+rescanBtn.addEventListener('click', function () {
+  startRescan();
+});
+
+if (emptyRescanBtn) {
+  emptyRescanBtn.addEventListener('click', function () {
+    startRescan();
+  });
+}
+
+function startRescan() {
   rescanBtn.disabled = true;
-  setLoading(true);
-  tableContainer.style.display = 'none';
+  loadingState.style.display = 'flex';
+  tableArea.style.display = 'none';
   emptyState.style.display = 'none';
   vscode.postMessage({ type: 'rescan' });
-});
+}
 
-/* ─── Row action handlers (delegated) ─── */
-bodyEl.addEventListener('click', (e) => {
-  const btn = e.target.closest('[data-action]');
-  if (!btn) {
-    return;
-  }
-  const issueId = btn.dataset.issueId;
-  const action = btn.dataset.action;
-  if (!issueId || !action) {
-    return;
-  }
-
-  // Disable button, show feedback
+/* Row click delegation */
+bodyEl.addEventListener('click', function (e) {
+  var btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  var id = btn.dataset.issueId;
+  var action = btn.dataset.action;
+  if (!id || !action) return;
   btn.disabled = true;
-  btn.textContent = '…';
-  vscode.postMessage({ type: 'fix', issueId: issueId, action: action });
+  btn.textContent = '...';
+  vscode.postMessage({ type: 'fix', issueId: id, action: action });
 });
 
-/* ─── Receive data ─── */
-window.addEventListener('message', (event) => {
-  const message = event.data;
-  if (message.type !== 'reportData') {
-    return;
-  }
+/* --- Sort / Filter --- */
+sortSelect.addEventListener('change', renderTable);
+filterSelect.addEventListener('change', renderTable);
 
-  setLoading(false);
-  rescanBtn.disabled = false;
+function getVisibleRows() {
+  var fmt = filterSelect.value;
+  var rows =
+    fmt === 'all'
+      ? allRows.slice()
+      : allRows.filter(function (r) {
+          return r.format.toLowerCase() === fmt;
+        });
+  var sort = sortSelect.value;
+  rows.sort(function (a, b) {
+    if (sort === 'savings-desc') return b.savingsPct - a.savingsPct;
+    if (sort === 'savings-asc') return a.savingsPct - b.savingsPct;
+    if (sort === 'size-desc') return b.sizeBytes - a.sizeBytes;
+    if (sort === 'size-asc') return a.sizeBytes - b.sizeBytes;
+    if (sort === 'name-asc') return a.path.localeCompare(b.path);
+    if (sort === 'name-desc') return b.path.localeCompare(a.path);
+    return 0;
+  });
+  return rows;
+}
 
-  const { summary, rows } = message;
-
-  // Update summary cards
-  issueCountEl.textContent = summary.count;
-  totalSavingsEl.textContent = summary.totalSavings;
-  totalSizeEl.textContent = formatBytesJs(summary.totalOriginalBytes);
-
-  // Format breakdown
-  const fmtParts = [];
-  for (const [fmt, count] of Object.entries(summary.formatCounts)) {
-    fmtParts.push(fmt + ': ' + count);
-  }
-  formatBreakdownEl.textContent = fmtParts.join(', ') || '—';
-
-  // Savings bar
-  if (summary.totalOriginalBytes > 0 && summary.count > 0) {
-    const pct = Math.round((summary.totalSavingsBytes / summary.totalOriginalBytes) * 100);
-    savingsBarSection.style.display = 'block';
-    savingsBarFill.style.width = pct + '%';
-    savingsPctEl.textContent = pct + '%';
-  } else {
-    savingsBarSection.style.display = 'none';
-  }
-
-  // Fix All button state
-  fixAllBtn.disabled = rows.length === 0;
-  fixAllBtn.innerHTML =
-    '<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M14.431 3.323l-8.47 10-4.39-3.391.943-1.219 3.25 2.512 7.53-8.9 1.137.998z"/></svg> Fix All';
-
-  if (rows.length === 0) {
-    tableContainer.style.display = 'none';
-    emptyState.style.display = 'flex';
-    return;
-  }
-
-  emptyState.style.display = 'none';
-  tableContainer.style.display = 'block';
-
-  // Build table rows
+function renderTable() {
+  var rows = getVisibleRows();
+  toolbarCount.textContent = rows.length + (rows.length === 1 ? ' image' : ' images');
   bodyEl.innerHTML = '';
-  for (const row of rows) {
-    const tr = document.createElement('tr');
-    const name = escapeHtml(fileName(row.path));
-    const dir = escapeHtml(dirPath(row.path));
-    const fmtLower = row.format.toLowerCase();
-    const severity = row.savingsPct >= 40 ? 'error' : 'warning';
 
-    // Build action buttons
-    let actionsHtml =
-      '<button class="btn btn-ghost" data-action="compress" data-issue-id="' +
-      escapeHtml(row.id) +
+  for (var i = 0; i < rows.length; i++) {
+    var r = rows[i];
+    var tr = document.createElement('tr');
+    var nm = esc(basename(r.path));
+    var dir = esc(dirname(r.path));
+    var fl = r.format.toLowerCase();
+    var sev = r.savingsPct >= 40 ? 'err' : 'warn';
+
+    var acts =
+      '<button class="btn-ghost" data-action="compress" data-issue-id="' +
+      esc(r.id) +
       '" title="Compress in place">Compress</button>';
-
-    if (row.canConvert) {
-      actionsHtml +=
-        '<button class="btn btn-ghost" data-action="convert-modern" data-issue-id="' +
-        escapeHtml(row.id) +
-        '" title="Convert to modern format">→ WebP</button>';
+    if (r.canConvert) {
+      acts +=
+        '<button class="btn-ghost btn-convert" data-action="convert-modern" data-issue-id="' +
+        esc(r.id) +
+        '" title="Convert to WebP">\u2192 WebP</button>';
+    }
+    if (r.canResize) {
+      acts +=
+        '<button class="btn-ghost" data-action="resize" data-issue-id="' +
+        esc(r.id) +
+        '" title="Resize to 1600px width">Resize</button>';
     }
 
     tr.innerHTML =
-      '<td class="td-severity-cell"><span class="severity-dot ' +
-      severity +
+      '<td><span class="dot dot-' +
+      sev +
       '"></span></td>' +
       '<td><div class="file-cell"><span class="file-name">' +
-      name +
+      nm +
       '</span>' +
-      (dir ? '<span class="file-path">' + dir + '</span>' : '') +
+      (dir ? '<span class="file-dir">' + dir + '</span>' : '') +
       '</div></td>' +
-      '<td><span class="format-badge ' +
-      fmtLower +
+      '<td><span class="fmt fmt-' +
+      fl +
       '">' +
-      escapeHtml(row.format) +
+      esc(r.format) +
       '</span></td>' +
-      '<td><span class="size-value">' +
-      escapeHtml(row.size) +
+      '<td><span class="mono">' +
+      esc(r.size) +
       '</span></td>' +
-      '<td><span class="size-value">' +
-      escapeHtml(row.estimated) +
+      '<td><span class="mono">' +
+      esc(r.estimated) +
       '</span></td>' +
-      '<td><div class="savings-cell">' +
-      '<div class="savings-bar-inline"><div class="savings-bar-inline-fill" style="width:' +
-      row.savingsPct +
-      '%"></div></div>' +
-      '<span class="savings-pct">' +
-      row.savingsPct +
-      '%</span>' +
-      '</div></td>' +
-      '<td><div class="actions-cell">' +
-      actionsHtml +
+      '<td><div class="sav-cell"><div class="sav-bar"><div class="sav-fill" style="width:' +
+      r.savingsPct +
+      '%"></div></div><span class="sav-pct">' +
+      r.savingsPct +
+      '%</span></div></td>' +
+      '<td><div class="act-cell">' +
+      acts +
       '</div></td>';
-
     bodyEl.appendChild(tr);
   }
+}
+
+/* --- Receive data --- */
+window.addEventListener('message', function (event) {
+  var msg = event.data;
+  if (msg.type !== 'reportData') return;
+
+  loadingState.style.display = 'none';
+  rescanBtn.disabled = false;
+  allRows = msg.rows;
+
+  var s = msg.summary;
+
+  /* Stats */
+  statsSection.style.display = 'grid';
+  issueCountEl.textContent = s.count;
+  totalSavingsEl.textContent = s.totalSavings;
+  totalSizeEl.textContent = fmtBytes(s.totalOriginalBytes);
+
+  var fp = [];
+  for (var f in s.formatCounts) {
+    fp.push(f.toUpperCase() + ' ' + s.formatCounts[f]);
+  }
+  formatBreakdownEl.textContent = fp.join(' \u00b7 ') || '\u2014';
+
+  /* Progress */
+  if (s.totalOriginalBytes > 0 && s.count > 0) {
+    var pct = Math.round((s.totalSavingsBytes / s.totalOriginalBytes) * 100);
+    optProgress.style.display = 'block';
+    optFill.style.width = pct + '%';
+    optPct.textContent = pct + '%';
+  } else {
+    optProgress.style.display = 'none';
+  }
+
+  /* Filter dropdown */
+  var fmts = {};
+  for (var i = 0; i < allRows.length; i++) {
+    fmts[allRows[i].format.toLowerCase()] = true;
+  }
+  var cur = filterSelect.value;
+  filterSelect.innerHTML = '<option value="all">All Formats</option>';
+  Object.keys(fmts)
+    .sort()
+    .forEach(function (f) {
+      var o = document.createElement('option');
+      o.value = f;
+      o.textContent = f.toUpperCase();
+      filterSelect.appendChild(o);
+    });
+  filterSelect.value = cur in fmts || cur === 'all' ? cur : 'all';
+
+  /* Fix All */
+  fixAllBtn.disabled = allRows.length === 0;
+  fixAllBtn.innerHTML =
+    '<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M14.431 3.323l-8.47 10-4.39-3.391.943-1.219 3.25 2.512 7.53-8.9 1.137.998z"/></svg> Fix All Issues';
+
+  if (allRows.length === 0) {
+    tableArea.style.display = 'none';
+    emptyState.style.display = 'flex';
+    footerEl.style.display = 'block';
+    return;
+  }
+
+  emptyState.style.display = 'none';
+  tableArea.style.display = 'block';
+  footerEl.style.display = 'block';
+  renderTable();
 });

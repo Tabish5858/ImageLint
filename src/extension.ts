@@ -102,6 +102,7 @@ async function applyFixById(issueId: string, action: OptimizationAction): Promis
         const newRel = path.relative(root, result.outputUri.fsPath).split(path.sep).join('/');
         await updateReferences(oldRel, newRel);
       }
+      await fs.unlink(result.originalUri.fsPath);
     }
 
     const saved = Math.max(0, result.originalBytes - result.optimizedBytes);
@@ -144,6 +145,8 @@ async function optimizeAllIssues(): Promise<void> {
   }
 
   const config = getConfig();
+  let fixed = 0;
+  let failed = 0;
   for (const issue of [...latestIssues]) {
     try {
       const action = getBestAction(issue);
@@ -155,13 +158,25 @@ async function optimizeAllIssues(): Promise<void> {
           const newRel = path.relative(root, result.outputUri.fsPath).split(path.sep).join('/');
           await updateReferences(oldRel, newRel);
         }
+        await fs.unlink(result.originalUri.fsPath);
       }
+      fixed++;
     } catch {
-      // Keep best-effort batch behavior.
+      failed++;
     }
   }
 
-  await runScan(true);
+  const parts: string[] = [];
+  if (fixed > 0) {
+    parts.push(`${fixed} optimized`);
+  }
+  if (failed > 0) {
+    parts.push(`${failed} failed`);
+  }
+  await runScan(false);
+  vscode.window.showInformationMessage(
+    `ImageLint: ${parts.join(', ')}. ${latestIssues.length} issues remaining.`
+  );
 }
 
 async function ignoreImage(relativePath: string): Promise<void> {
