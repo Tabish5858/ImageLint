@@ -2,8 +2,8 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
 import { analyzeImages } from './analyzer';
-import { getConfig } from './config';
 import { ImageLintCodeActionProvider } from './codeActions';
+import { getConfig } from './config';
 import { DiagnosticsManager } from './diagnostics';
 import { optimizeIssue } from './optimizer';
 import { ReportPanel } from './report';
@@ -45,6 +45,7 @@ async function runScan(showInfoMessage = false): Promise<ScanSummary> {
 
   statusBar.setVisible(config.showStatusBar);
   statusBar.setSummary(summary);
+  reportPanel.update(issues);
 
   if (showInfoMessage) {
     vscode.window.showInformationMessage(
@@ -128,15 +129,33 @@ async function optimizeActiveFile(): Promise<void> {
   await applyFixById(target.id, 'compress');
 }
 
+function getBestAction(issue: ImageIssue): OptimizationAction {
+  const hasConvert = issue.suggestions.some((s) => s.includes('convert'));
+  if (hasConvert) {
+    return 'convert-modern';
+  }
+  return 'compress';
+}
+
 async function optimizeAllIssues(): Promise<void> {
   if (latestIssues.length === 0) {
     vscode.window.showInformationMessage('ImageLint: no flagged images to optimize.');
     return;
   }
 
+  const config = getConfig();
   for (const issue of [...latestIssues]) {
     try {
-      await optimizeIssue(issue, 'compress', getConfig());
+      const action = getBestAction(issue);
+      const result = await optimizeIssue(issue, action, config);
+      if (action === 'convert-modern' && result.outputUri.fsPath !== result.originalUri.fsPath) {
+        const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+        if (root) {
+          const oldRel = path.relative(root, result.originalUri.fsPath).split(path.sep).join('/');
+          const newRel = path.relative(root, result.outputUri.fsPath).split(path.sep).join('/');
+          await updateReferences(oldRel, newRel);
+        }
+      }
     } catch {
       // Keep best-effort batch behavior.
     }
@@ -150,7 +169,11 @@ async function ignoreImage(relativePath: string): Promise<void> {
   const current = cfg.get<string[]>('excludePatterns', ['**/node_modules/**']);
   const normalized = `**/${relativePath}`;
   if (!current.includes(normalized)) {
-    await cfg.update('excludePatterns', [...current, normalized], vscode.ConfigurationTarget.Workspace);
+    await cfg.update(
+      'excludePatterns',
+      [...current, normalized],
+      vscode.ConfigurationTarget.Workspace
+    );
   }
   await runScan(false);
 }
@@ -158,8 +181,17 @@ async function ignoreImage(relativePath: string): Promise<void> {
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
   diagnosticsManager = new DiagnosticsManager();
   statusBar = new StatusBarController();
-  reportPanel = new ReportPanel(context.extensionUri, () => {
-    void optimizeAllIssues();
+  reportPanel = new ReportPanel(context.extensionUri, async (message) => {
+    if (message.type === 'fixAll') {
+      await optimizeAllIssues();
+      reportPanel.update(latestIssues);
+    } else if (message.type === 'fix' && message.issueId && message.action) {
+      await applyFixById(message.issueId, message.action as OptimizationAction);
+      reportPanel.update(latestIssues);
+    } else if (message.type === 'rescan') {
+      await runScan(false);
+      reportPanel.update(latestIssues);
+    }
   });
 
   const codeActionProvider = new ImageLintCodeActionProvider(diagnosticsManager, getConfig);
@@ -206,9 +238,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       await cfg.update('enabled', !current, vscode.ConfigurationTarget.Global);
       await runScan(false);
     }),
-    vscode.commands.registerCommand('imagelint.applyFix', async (issueId: string, action: OptimizationAction) => {
-      await applyFixById(issueId, action);
-    }),
+    vscode.commands.registerCommand(
+      'imagelint.applyFix',
+      async (issueId: string, action: OptimizationAction) => {
+        await applyFixById(issueId, action);
+      }
+    ),
     vscode.commands.registerCommand('imagelint.ignoreImage', async (relativePath: string) => {
       await ignoreImage(relativePath);
     })

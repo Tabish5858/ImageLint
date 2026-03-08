@@ -2,7 +2,7 @@
   "name": "imagelint",
   "displayName": "ImageLint",
   "description": "ESLint for images: detect, report, and fix unoptimized images in your workspace.",
-  "version": "0.1.3",
+  "version": "0.2.0",
   "publisher": "tabishbinishfaq",
   "license": "MIT",
   "repository": {

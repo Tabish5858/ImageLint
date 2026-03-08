@@ -4,14 +4,22 @@ import * as vscode from 'vscode';
 import { ImageIssue } from './types';
 import { formatBytes } from './utils';
 
+interface ReportMessage {
+  type: string;
+  issueId?: string;
+  action?: string;
+}
+
 interface ReportRow {
   id: string;
   path: string;
   format: string;
   size: string;
+  sizeBytes: number;
   estimated: string;
   savingsPct: number;
-  suggestions: string;
+  suggestions: string[];
+  canConvert: boolean;
 }
 
 export class ReportPanel {
@@ -19,7 +27,7 @@ export class ReportPanel {
 
   constructor(
     private readonly extensionUri: vscode.Uri,
-    private readonly onFixAll: () => void
+    private readonly onMessage: (message: ReportMessage) => void
   ) {}
 
   async show(issues: ImageIssue[]): Promise<void> {
@@ -38,32 +46,56 @@ export class ReportPanel {
         this.panel = undefined;
       });
 
-      this.panel.webview.onDidReceiveMessage((message: { type: string }) => {
-        if (message.type === 'fixAll') {
-          this.onFixAll();
-        }
+      this.panel.webview.onDidReceiveMessage((message: ReportMessage) => {
+        this.onMessage(message);
       });
 
       this.panel.webview.html = await this.getHtml(this.panel.webview);
     }
 
     this.panel.reveal(vscode.ViewColumn.Beside);
+    this.sendData(issues);
+  }
 
+  update(issues: ImageIssue[]): void {
+    if (this.panel) {
+      this.sendData(issues);
+    }
+  }
+
+  private sendData(issues: ImageIssue[]): void {
+    if (!this.panel) {
+      return;
+    }
+
+    const modernFormats = new Set(['webp', 'avif']);
     const rows: ReportRow[] = issues.map((issue) => ({
       id: issue.id,
       path: issue.relativePath,
       format: issue.format,
       size: formatBytes(issue.originalBytes),
+      sizeBytes: issue.originalBytes,
       estimated: formatBytes(issue.estimatedBytes),
       savingsPct: issue.savingsPct,
-      suggestions: issue.suggestions.join(', ')
+      suggestions: issue.suggestions,
+      canConvert:
+        !modernFormats.has(issue.format.toLowerCase()) &&
+        !['svg', 'gif'].includes(issue.format.toLowerCase())
     }));
+
+    const formatCounts: Record<string, number> = {};
+    for (const row of rows) {
+      formatCounts[row.format] = (formatCounts[row.format] || 0) + 1;
+    }
 
     this.panel.webview.postMessage({
       type: 'reportData',
       summary: {
         count: issues.length,
-        totalSavings: formatBytes(issues.reduce((sum, issue) => sum + issue.savingsBytes, 0))
+        totalSavings: formatBytes(issues.reduce((sum, issue) => sum + issue.savingsBytes, 0)),
+        totalSavingsBytes: issues.reduce((sum, issue) => sum + issue.savingsBytes, 0),
+        totalOriginalBytes: issues.reduce((sum, issue) => sum + issue.originalBytes, 0),
+        formatCounts
       },
       rows
     });
@@ -71,8 +103,12 @@ export class ReportPanel {
 
   private async getHtml(webview: vscode.Webview): Promise<string> {
     const htmlPath = vscode.Uri.joinPath(this.extensionUri, 'webview', 'report.html');
-    const cssUri = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'webview', 'report.css'));
-    const jsUri = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'webview', 'report.js'));
+    const cssUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(this.extensionUri, 'webview', 'report.css')
+    );
+    const jsUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(this.extensionUri, 'webview', 'report.js')
+    );
 
     const template = await fs.readFile(htmlPath.fsPath, 'utf8');
 
