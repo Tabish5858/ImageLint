@@ -5,6 +5,11 @@
   "version": "0.1.0",
   "publisher": "tabishbinishfaq",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Tabish5858/ImageLint"
+  },
+  "icon": "icon.png",
   "engines": {
     "vscode": "^1.75.0"
   },
