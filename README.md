@@ -14,21 +14,29 @@ ESLint for images in VS Code-compatible editors. ImageLint scans your workspace,
 - Background scans (`on startup`, `on save`, `manual command`)
 - Inline diagnostics on image references in code
 - Quick fixes:
-	- Compress in place
-	- Convert to modern format (`WebP` / `AVIF`)
-	- Resize width
-	- Ignore image
+  - Compress in place
+  - Convert to modern format (`WebP` / `AVIF`)
+  - Resize width
+  - Ignore image
 - Audit report WebView with "Fix All"
 - Status bar summary (issue count + potential savings)
 
 ## Supported Formats
 
+**Scanned for optimization:**
+
 - PNG
 - JPEG/JPG
-- GIF
-- SVG
-- WebP
-- AVIF
+
+**Recognized but not scanned (already modern or non-convertible):**
+
+- WebP — already modern format
+- AVIF — already modern format
+
+**Not scanned:**
+
+- GIF — animation would be lost in WebP conversion
+- SVG — vector format, different optimization requirements
 
 ## Commands
 

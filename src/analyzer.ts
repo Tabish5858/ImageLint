@@ -4,7 +4,7 @@ import sharp from 'sharp';
 import * as vscode from 'vscode';
 import { ImageLintConfig } from './config';
 import { ImageIssue } from './types';
-import { createIssueId, estimateSavingsPct, toPosixPath } from './utils';
+import { createIssueId, estimateSavingsPct, isSupportedImageFile, toPosixPath } from './utils';
 
 function estimateOptimizedBytes(ext: string, bytes: number): number {
   const lower = ext.toLowerCase();
@@ -17,7 +17,8 @@ function estimateOptimizedBytes(ext: string, bytes: number): number {
     return Math.floor(bytes * (1 - 0.3 * smallFileAdjust));
   }
   if (lower === '.gif') {
-    return Math.floor(bytes * (1 - 0.2 * smallFileAdjust));
+    // GIFs convert to WebP with significant savings (WebP handles animation better)
+    return Math.floor(bytes * (1 - 0.5 * smallFileAdjust));
   }
   if (lower === '.svg') {
     return Math.floor(bytes * (1 - 0.25 * smallFileAdjust));
@@ -43,6 +44,11 @@ export async function analyzeImages(
   for (const uri of imageUris) {
     const ext = path.extname(uri.fsPath).toLowerCase();
 
+    // Only process supported image files
+    if (!isSupportedImageFile(uri.fsPath)) {
+      continue;
+    }
+
     // WebP and AVIF are already modern formats — never flag them
     if (ext === '.webp' || ext === '.avif') {
       continue;
@@ -52,17 +58,14 @@ export async function analyzeImages(
     const originalBytes = stat.size;
     let metadata: sharp.Metadata | undefined;
 
-    if (ext !== '.svg' && ext !== '.gif') {
-      try {
-        metadata = await sharp(uri.fsPath).metadata();
-      } catch {
-        // Ignore metadata failures; file-size checks still apply.
-      }
+    try {
+      metadata = await sharp(uri.fsPath).metadata();
+    } catch {
+      // Ignore metadata failures; file-size checks still apply.
     }
 
     const isTooLarge = originalBytes > thresholdBytes;
-    const needsModernFormat =
-      config.autoConvertToWebP && !['.webp', '.avif', '.svg', '.gif'].includes(ext);
+    const needsModernFormat = config.autoConvertToWebP && !['.webp', '.avif'].includes(ext);
     const likelyOversizedDimensions = Boolean(metadata?.width && metadata.width > 2000);
 
     if (!isTooLarge && !needsModernFormat && !likelyOversizedDimensions) {

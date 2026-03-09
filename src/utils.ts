@@ -1,6 +1,6 @@
 import * as path from 'path';
 
-export const SUPPORTED_IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp', '.avif'];
+export const SUPPORTED_IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg'];
 
 export function formatBytes(bytes: number): string {
   if (bytes < 1024) {

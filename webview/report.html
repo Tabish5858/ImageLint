@@ -29,13 +29,14 @@
     <div class="header-actions">
       <button id="rescanBtn" class="btn btn-outline" title="Re-scan workspace">
         <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-          <path d="M13.451 5.609l-.579-.939-1.068.812-.076.094a10.8 10.8 0 00-1.545 2.072c-.498.744-.985 1.548-1.35 2.352H7.661a5.88 5.88 0 00-.274-.554 8.572 8.572 0 00-1.07-1.509 11.855 11.855 0 00-2.025-2.027l-.076-.056-1.006.892.083.07c.396.335.863.812 1.297 1.35.417.516.779 1.07 1.04 1.617l.052.113h2.152l.038-.084c.327-.72.795-1.516 1.29-2.257.456-.684.935-1.324 1.327-1.802l1.012-.786-.05-.358zM8 1a7 7 0 100 14A7 7 0 008 1zm0 12.8A5.8 5.8 0 118 2.2a5.8 5.8 0 010 11.6z"/>
+          <path
+            d="M13.451 5.609l-.579-.939-1.068.812-.076.094a10.8 10.8 0 00-1.545 2.072c-.498.744-.985 1.548-1.35 2.352H7.661a5.88 5.88 0 00-.274-.554 8.572 8.572 0 00-1.07-1.509 11.855 11.855 0 00-2.025-2.027l-.076-.056-1.006.892.083.07c.396.335.863.812 1.297 1.35.417.516.779 1.07 1.04 1.617l.052.113h2.152l.038-.084c.327-.72.795-1.516 1.29-2.257.456-.684.935-1.324 1.327-1.802l1.012-.786-.05-.358zM8 1a7 7 0 100 14A7 7 0 008 1zm0 12.8A5.8 5.8 0 118 2.2a5.8 5.8 0 010 11.6z" />
         </svg>
         Rescan
       </button>
       <button id="fixAllBtn" class="btn btn-primary" title="Fix all issues with optimal actions" disabled>
         <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-          <path d="M14.431 3.323l-8.47 10-4.39-3.391.943-1.219 3.25 2.512 7.53-8.9 1.137.998z"/>
+          <path d="M14.431 3.323l-8.47 10-4.39-3.391.943-1.219 3.25 2.512 7.53-8.9 1.137.998z" />
         </svg>
         Fix All Issues
       </button>
@@ -46,28 +47,40 @@
   <section class="stats hidden" id="statsSection">
     <div class="stat-card stat-issues">
       <div class="stat-icon-wrap">
-        <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor"><path d="M7.56 1h.88l6.54 12.26-.44.74H1.44l-.42-.74L7.56 1zm.44 1.7L2.84 13H13.16L8 2.7zM8.5 10V11h-1v-1h1zm0-1h-1V6h1v3z"/></svg>
+        <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
+          <path
+            d="M7.56 1h.88l6.54 12.26-.44.74H1.44l-.42-.74L7.56 1zm.44 1.7L2.84 13H13.16L8 2.7zM8.5 10V11h-1v-1h1zm0-1h-1V6h1v3z" />
+        </svg>
       </div>
       <span class="stat-value" id="issueCount">0</span>
       <span class="stat-label">Issues</span>
     </div>
     <div class="stat-card stat-savings">
       <div class="stat-icon-wrap">
-        <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 12.8A5.8 5.8 0 118 2.2a5.8 5.8 0 010 11.6z"/><path d="M10.5 7.5L7.5 4.5 4.5 7.5h2V11h2V7.5h2z" transform="rotate(180,8,8)"/></svg>
+        <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 12.8A5.8 5.8 0 118 2.2a5.8 5.8 0 010 11.6z" />
+          <path d="M10.5 7.5L7.5 4.5 4.5 7.5h2V11h2V7.5h2z" transform="rotate(180,8,8)" />
+        </svg>
       </div>
       <span class="stat-value" id="totalSavings">0 B</span>
       <span class="stat-label">Savings</span>
     </div>
     <div class="stat-card stat-total">
       <div class="stat-icon-wrap">
-        <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor"><path d="M14 1H2L1 2v12l1 1h12l1-1V2l-1-1zM2 13V2h12v11H2z"/><path d="M4 4h8v1H4V4zm0 3h8v1H4V7zm0 3h5v1H4v-1z"/></svg>
+        <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M14 1H2L1 2v12l1 1h12l1-1V2l-1-1zM2 13V2h12v11H2z" />
+          <path d="M4 4h8v1H4V4zm0 3h8v1H4V7zm0 3h5v1H4v-1z" />
+        </svg>
       </div>
       <span class="stat-value" id="totalSize">0 B</span>
       <span class="stat-label">Total Size</span>
     </div>
     <div class="stat-card stat-formats">
       <div class="stat-icon-wrap">
-        <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor"><path d="M14.5 2H9l-.35-.15-.65-.64-.65.64L7 2H1.5l-.5.5v10l.5.5h13l.5-.5v-10l-.5-.5zM14 12H2V3h4.65l.85.85h.01l.85-.85H14v9z"/></svg>
+        <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
+          <path
+            d="M14.5 2H9l-.35-.15-.65-.64-.65.64L7 2H1.5l-.5.5v10l.5.5h13l.5-.5v-10l-.5-.5zM14 12H2V3h4.65l.85.85h.01l.85-.85H14v9z" />
+        </svg>
       </div>
       <span class="stat-value" id="formatBreakdown">&mdash;</span>
       <span class="stat-label">Formats</span>
@@ -125,9 +138,10 @@
     <!-- Empty state -->
     <div class="empty hidden" id="emptyState">
       <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
-        <circle cx="36" cy="36" r="34" stroke="var(--success)" stroke-width="2" opacity="0.2"/>
-        <circle cx="36" cy="36" r="22" stroke="var(--success)" stroke-width="1.5" opacity="0.1"/>
-        <path d="M24 37l8 8 16-16" stroke="var(--success)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="36" cy="36" r="34" stroke="var(--success)" stroke-width="2" opacity="0.2" />
+        <circle cx="36" cy="36" r="22" stroke="var(--success)" stroke-width="1.5" opacity="0.1" />
+        <path d="M24 37l8 8 16-16" stroke="var(--success)" stroke-width="3" stroke-linecap="round"
+          stroke-linejoin="round" />
       </svg>
       <h2>All Clear!</h2>
       <p>No unoptimized images found in your workspace.</p>
@@ -135,7 +149,7 @@
     </div>
 
     <!-- Loading -->
-    <div class="loading" id="loadingState">
+    <div class="loading hidden" id="loadingState">
       <div class="dots"><span></span><span></span><span></span></div>
       <p>Analyzing images&hellip;</p>
     </div>
