@@ -61,7 +61,7 @@ jobs:
             "alpine-x64:@img/sharp-linuxmusl-x64 @img/sharp-libvips-linuxmusl-x64"
             "alpine-arm64:@img/sharp-linuxmusl-arm64 @img/sharp-libvips-linuxmusl-arm64"
             "win32-x64:@img/sharp-win32-x64"
-            "win32-ia32:@img/sharp-win32-ia32"
+            "win32-arm64:@img/sharp-win32-arm64"
           )
 
           for entry in "${TARGETS[@]}"; do
