@@ -35,7 +35,10 @@ async function runScan(showInfoMessage = false): Promise<ScanSummary> {
   const issues = await analyzeImages(imageUris, config);
   latestIssues = issues;
 
-  await diagnosticsManager.setIssues(issues, config.excludePatterns);
+  await diagnosticsManager.setIssues(issues, config.excludePatterns, {
+    showInlineDiagnostics: config.showInlineDiagnostics,
+    diagnosticSeverity: config.diagnosticSeverity
+  });
 
   const summary: ScanSummary = {
     scanned: imageUris.length,
@@ -206,6 +209,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     } else if (message.type === 'rescan') {
       await runScan(false);
       reportPanel.update(latestIssues);
+    } else if (message.type === 'getSettings') {
+      const config = getConfig();
+      reportPanel.sendSettings(config);
+    } else if (message.type === 'updateSetting' && message.key && message.value !== undefined) {
+      const cfg = vscode.workspace.getConfiguration('imagelint');
+      await cfg.update(message.key as string, message.value, vscode.ConfigurationTarget.Global);
+      await runScan(false);
+      reportPanel.sendSettings(getConfig());
     }
   });
 

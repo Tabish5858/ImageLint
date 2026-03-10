@@ -21,6 +21,11 @@ const sortSelect = document.getElementById('sortSelect');
 const filterSelect = document.getElementById('filterSelect');
 const footerEl = document.getElementById('footer');
 
+/* Settings DOM */
+const settingsBtn = document.getElementById('settingsBtn');
+const settingsPanel = document.getElementById('settingsPanel');
+const settingsCloseBtn = document.getElementById('settingsCloseBtn');
+
 var allRows = [];
 
 /* --- Helpers --- */
@@ -69,6 +74,107 @@ function startRescan() {
   tableArea.classList.add('hidden');
   emptyState.classList.add('hidden');
   vscode.postMessage({ type: 'rescan' });
+}
+
+/* --- Settings toggle --- */
+settingsBtn.addEventListener('click', function () {
+  var isOpen = !settingsPanel.classList.contains('hidden');
+  if (isOpen) {
+    settingsPanel.classList.add('hidden');
+  } else {
+    settingsPanel.classList.remove('hidden');
+    vscode.postMessage({ type: 'getSettings' });
+  }
+});
+
+settingsCloseBtn.addEventListener('click', function () {
+  settingsPanel.classList.add('hidden');
+});
+
+/* Settings map: element id → config key */
+var settingsMap = {
+  'setting-enabled': { key: 'enabled', type: 'boolean' },
+  'setting-scanOnSave': { key: 'scanOnSave', type: 'boolean' },
+  'setting-showStatusBar': { key: 'showStatusBar', type: 'boolean' },
+  'setting-showInlineDiagnostics': { key: 'showInlineDiagnostics', type: 'boolean' },
+  'setting-autoConvertToWebP': { key: 'autoConvertToWebP', type: 'boolean' },
+  'setting-preferAVIF': { key: 'preferAVIF', type: 'boolean' },
+  'setting-diagnosticSeverity': { key: 'diagnosticSeverity', type: 'select' },
+  'setting-sizeThreshold': { key: 'sizeThreshold', type: 'number' },
+  'setting-compressionQuality': { key: 'compressionQuality', type: 'number' }
+};
+
+var settingsDebounce = {};
+
+function handleSettingChange(id) {
+  var el = document.getElementById(id);
+  var info = settingsMap[id];
+  if (!el || !info) return;
+
+  var value;
+  if (info.type === 'boolean') {
+    value = el.checked;
+  } else if (info.type === 'number') {
+    value = parseInt(el.value, 10);
+    if (isNaN(value) || value < 1) return;
+  } else {
+    value = el.value;
+  }
+
+  /* Debounce number inputs */
+  if (info.type === 'number') {
+    clearTimeout(settingsDebounce[id]);
+    settingsDebounce[id] = setTimeout(function () {
+      vscode.postMessage({ type: 'updateSetting', key: info.key, value: value });
+    }, 600);
+  } else {
+    vscode.postMessage({ type: 'updateSetting', key: info.key, value: value });
+  }
+}
+
+/* Attach listeners */
+Object.keys(settingsMap).forEach(function (id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var info = settingsMap[id];
+  if (info.type === 'boolean') {
+    el.addEventListener('change', function () {
+      handleSettingChange(id);
+    });
+  } else if (info.type === 'number') {
+    el.addEventListener('input', function () {
+      handleSettingChange(id);
+    });
+  } else {
+    el.addEventListener('change', function () {
+      handleSettingChange(id);
+    });
+  }
+});
+
+function applySettings(s) {
+  var setVal = function (id, val) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var info = settingsMap[id];
+    if (!info) return;
+    if (info.type === 'boolean') {
+      el.checked = !!val;
+    } else if (info.type === 'number') {
+      el.value = val;
+    } else {
+      el.value = val;
+    }
+  };
+  setVal('setting-enabled', s.enabled);
+  setVal('setting-scanOnSave', s.scanOnSave);
+  setVal('setting-showStatusBar', s.showStatusBar);
+  setVal('setting-showInlineDiagnostics', s.showInlineDiagnostics);
+  setVal('setting-autoConvertToWebP', s.autoConvertToWebP);
+  setVal('setting-preferAVIF', s.preferAVIF);
+  setVal('setting-diagnosticSeverity', s.diagnosticSeverity);
+  setVal('setting-sizeThreshold', s.sizeThreshold);
+  setVal('setting-compressionQuality', s.compressionQuality);
 }
 
 /* Row click delegation */
@@ -182,6 +288,12 @@ function renderTable() {
 /* --- Receive data --- */
 window.addEventListener('message', function (event) {
   var msg = event.data;
+
+  if (msg.type === 'settings') {
+    applySettings(msg.settings);
+    return;
+  }
+
   if (msg.type !== 'reportData') return;
 
   loadingState.classList.add('hidden');
