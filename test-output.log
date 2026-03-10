@@ -1,0 +1,58 @@
+
+> imagelint@0.5.0 test
+> npm run build && npm run compile-tests && node ./out/test/runTest.js
+
+
+> imagelint@0.5.0 build
+> node esbuild.js
+
+
+  dist/extension.js  2.0mb ⚠️
+
+⚡ Done in 53ms
+  Copied sharp native deps → dist/node_modules/
+
+> imagelint@0.5.0 compile-tests
+> tsc -p ./test/tsconfig.json
+
+- Resolving version...
+✔ Validated version: 1.111.0
+✔ Found existing install in /Users/mac/Desktop/ImageLint/.vscode-test/vscode-darwin-arm64-1.111.0
+[90m[main 2026-03-10T12:41:58.477Z][0m update#setState disabled
+[90m[main 2026-03-10T12:41:58.478Z][0m update#ctor - updates are disabled by the environment
+Started local extension host with pid 43347.
+Unable to read file '/Users/mac/Desktop/ImageLint/out/src/package.json' (Error: Unable to resolve nonexistent file '/Users/mac/Desktop/ImageLint/out/src/package.json')
+Unable to read file '/Users/mac/Desktop/ImageLint/out/test/package.json' (Error: Unable to resolve nonexistent file '/Users/mac/Desktop/ImageLint/out/test/package.json')
+MCP Registry configured: https://api.mcp.github.com
+Settings Sync: Account status changed from uninitialized to unavailable
+[0m[0m
+[0m  utils[0m
+[0m    formatBytes[0m
+    [32m  ✔[0m[90m bytes[0m
+    [32m  ✔[0m[90m KB[0m
+    [32m  ✔[0m[90m MB[0m
+[0m    isSupportedImageFile[0m
+    [32m  ✔[0m[90m returns true for supported formats[0m
+    [32m  ✔[0m[90m returns false for unsupported formats[0m
+    [32m  ✔[0m[90m handles paths with directories[0m
+    [32m  ✔[0m[90m is case-insensitive via lowercase extension[0m
+[0m    toPosixPath[0m
+    [32m  ✔[0m[90m converts backslashes to forward slashes[0m
+    [32m  ✔[0m[90m preserves forward slashes[0m
+[0m    createIssueId[0m
+    [32m  ✔[0m[90m creates id with imagelint prefix[0m
+[0m    estimateSavingsPct[0m
+    [32m  ✔[0m[90m returns 0 for zero original bytes[0m
+    [32m  ✔[0m[90m calculates correct percentage[0m
+    [32m  ✔[0m[90m returns 0 when estimated is larger[0m
+[0m    clamp[0m
+    [32m  ✔[0m[90m clamps below min[0m
+    [32m  ✔[0m[90m clamps above max[0m
+    [32m  ✔[0m[90m passes through value in range[0m
+[0m    escapeRegExp[0m
+    [32m  ✔[0m[90m escapes special regex characters[0m
+    [32m  ✔[0m[90m leaves normal strings unchanged[0m
+    [32m  ✔[0m[90m escapes all special chars[0m
+[92m [0m[32m 19 passing[0m[90m (27ms)[0m
+[90m[main 2026-03-10T12:41:59.910Z][0m Extension host with pid 43347 exited with code: 0, signal: unknown.
+Exit code:   0

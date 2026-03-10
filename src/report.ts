@@ -1,6 +1,7 @@
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs/promises';
 import * as vscode from 'vscode';
+import { DiagnosticsConfig } from './config';
 import { ImageIssue } from './types';
 import { formatBytes } from './utils';
 
@@ -8,6 +9,9 @@ interface ReportMessage {
   type: string;
   issueId?: string;
   action?: string;
+  diagnosticsEnabled?: boolean;
+  severity?: string;
+  fileTypes?: string[];
 }
 
 interface ReportRow {
@@ -62,6 +66,17 @@ export class ReportPanel {
   update(issues: ImageIssue[]): void {
     if (this.panel) {
       this.sendData(issues);
+    }
+  }
+
+  sendSettings(diagConfig: DiagnosticsConfig): void {
+    if (this.panel) {
+      this.panel.webview.postMessage({
+        type: 'settingsData',
+        diagnosticsEnabled: diagConfig.enabled,
+        severity: diagConfig.severity,
+        fileTypes: diagConfig.fileTypes
+      });
     }
   }
 

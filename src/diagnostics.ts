@@ -1,10 +1,29 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
+import { DiagnosticsConfig, DiagnosticSeverityLevel } from './config';
 import { ImageIssue } from './types';
 import { escapeRegExp, toPosixPath } from './utils';
 
-const CODE_GLOB = '**/*.{js,jsx,ts,tsx,html,css,scss,vue,svelte,md,mdx}';
+function buildCodeGlob(fileTypes: string[]): string {
+  if (fileTypes.length === 0) {
+    return '';
+  }
+  return `**/*.{${fileTypes.join(',')}}`;
+}
+
+function toVscodeSeverity(level: DiagnosticSeverityLevel): vscode.DiagnosticSeverity {
+  switch (level) {
+    case 'error':
+      return vscode.DiagnosticSeverity.Error;
+    case 'warning':
+      return vscode.DiagnosticSeverity.Warning;
+    case 'information':
+      return vscode.DiagnosticSeverity.Information;
+    case 'hint':
+      return vscode.DiagnosticSeverity.Hint;
+  }
+}
 
 function offsetToPosition(text: string, offset: number): vscode.Position {
   const upToOffset = text.slice(0, offset);
@@ -36,20 +55,27 @@ export class DiagnosticsManager {
     return this.issueById.get(id);
   }
 
-  async setIssues(issues: ImageIssue[], excludePatterns: string[]): Promise<void> {
+  async setIssues(
+    issues: ImageIssue[],
+    excludePatterns: string[],
+    diagConfig: DiagnosticsConfig
+  ): Promise<void> {
     this.clear();
 
-    if (issues.length === 0) {
-      return;
-    }
-
+    // Always store issues for code actions even if diagnostics are off
     for (const issue of issues) {
       this.issueById.set(issue.id, issue);
     }
 
-    const excludeGlob = excludePatterns.length > 0 ? `{${excludePatterns.join(',')}}` : undefined;
-    const codeFiles = await vscode.workspace.findFiles(CODE_GLOB, excludeGlob);
+    if (!diagConfig.enabled || issues.length === 0 || diagConfig.fileTypes.length === 0) {
+      return;
+    }
 
+    const codeGlob = buildCodeGlob(diagConfig.fileTypes);
+    const excludeGlob = excludePatterns.length > 0 ? `{${excludePatterns.join(',')}}` : undefined;
+    const codeFiles = await vscode.workspace.findFiles(codeGlob, excludeGlob);
+
+    const severity = toVscodeSeverity(diagConfig.severity);
     const diagnosticsByFile = new Map<string, vscode.Diagnostic[]>();
 
     for (const fileUri of codeFiles) {
@@ -64,13 +90,7 @@ export class DiagnosticsManager {
           const endPos = offsetToPosition(text, match.index + match[0].length);
           const fullRange = new vscode.Range(startPos, endPos);
 
-          const diagnostic = new vscode.Diagnostic(
-            fullRange,
-            issue.message,
-            issue.severity === 'error'
-              ? vscode.DiagnosticSeverity.Error
-              : vscode.DiagnosticSeverity.Warning
-          );
+          const diagnostic = new vscode.Diagnostic(fullRange, issue.message, severity);
           diagnostic.source = 'ImageLint';
           diagnostic.code = issue.id;
 

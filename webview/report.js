@@ -21,7 +21,18 @@ const sortSelect = document.getElementById('sortSelect');
 const filterSelect = document.getElementById('filterSelect');
 const footerEl = document.getElementById('footer');
 
+/* Settings DOM */
+const settingsPanel = document.getElementById('settingsPanel');
+const settingsToggle = document.getElementById('settingsToggle');
+const settingsBody = document.getElementById('settingsBody');
+const settingsChevron = document.getElementById('settingsChevron');
+const diagEnabledEl = document.getElementById('diagEnabled');
+const diagSeverityEl = document.getElementById('diagSeverity');
+const fileTypeChipsEl = document.getElementById('fileTypeChips');
+
 var allRows = [];
+var currentFileTypes = [];
+var allFileTypes = ['js', 'jsx', 'ts', 'tsx', 'html', 'css', 'scss', 'vue', 'svelte', 'md', 'mdx'];
 
 /* --- Helpers --- */
 function esc(v) {
@@ -182,6 +193,12 @@ function renderTable() {
 /* --- Receive data --- */
 window.addEventListener('message', function (event) {
   var msg = event.data;
+
+  if (msg.type === 'settingsData') {
+    applySettingsData(msg);
+    return;
+  }
+
   if (msg.type !== 'reportData') return;
 
   loadingState.classList.add('hidden');
@@ -246,3 +263,70 @@ window.addEventListener('message', function (event) {
   footerEl.classList.remove('hidden');
   renderTable();
 });
+
+/* --- Settings Panel --- */
+settingsToggle.addEventListener('click', function () {
+  var isOpen = !settingsBody.classList.contains('hidden');
+  if (isOpen) {
+    settingsBody.classList.add('hidden');
+    settingsChevron.classList.remove('settings-chevron-open');
+  } else {
+    settingsBody.classList.remove('hidden');
+    settingsChevron.classList.add('settings-chevron-open');
+  }
+});
+
+diagEnabledEl.addEventListener('change', function () {
+  vscode.postMessage({
+    type: 'updateSettings',
+    diagnosticsEnabled: diagEnabledEl.checked
+  });
+});
+
+diagSeverityEl.addEventListener('change', function () {
+  vscode.postMessage({
+    type: 'updateSettings',
+    severity: diagSeverityEl.value
+  });
+});
+
+function renderFileTypeChips() {
+  fileTypeChipsEl.innerHTML = '';
+  for (var i = 0; i < allFileTypes.length; i++) {
+    var ft = allFileTypes[i];
+    var chip = document.createElement('button');
+    chip.className =
+      'filetype-chip' + (currentFileTypes.indexOf(ft) !== -1 ? ' filetype-chip-active' : '');
+    chip.textContent = '.' + ft;
+    chip.dataset.ft = ft;
+    fileTypeChipsEl.appendChild(chip);
+  }
+}
+
+fileTypeChipsEl.addEventListener('click', function (e) {
+  var chip = e.target.closest('[data-ft]');
+  if (!chip) return;
+  var ft = chip.dataset.ft;
+  var idx = currentFileTypes.indexOf(ft);
+  if (idx !== -1) {
+    currentFileTypes.splice(idx, 1);
+  } else {
+    currentFileTypes.push(ft);
+  }
+  renderFileTypeChips();
+  vscode.postMessage({
+    type: 'updateSettings',
+    fileTypes: currentFileTypes.slice()
+  });
+});
+
+function applySettingsData(msg) {
+  settingsPanel.classList.remove('hidden');
+  diagEnabledEl.checked = msg.diagnosticsEnabled;
+  diagSeverityEl.value = msg.severity;
+  currentFileTypes = msg.fileTypes.slice();
+  renderFileTypeChips();
+}
+
+/* Request current settings on load */
+vscode.postMessage({ type: 'getSettings' });

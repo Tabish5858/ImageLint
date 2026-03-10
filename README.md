@@ -59,6 +59,9 @@ All settings are under `imagelint.*`:
 - `imagelint.excludePatterns` (default: `["**/node_modules/**"]`)
 - `imagelint.showStatusBar` (default: `true`)
 - `imagelint.compressionQuality` 1-100 (default: `80`)
+- `imagelint.diagnostics.enabled` (default: `true`) — Show/hide inline diagnostics in code files
+- `imagelint.diagnostics.severity` (default: `"warning"`) — Severity level: `error`, `warning`, `information`, or `hint`
+- `imagelint.diagnostics.fileTypes` (default: all supported) — File extensions in which to show diagnostics
 
 ## Development
 

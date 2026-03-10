@@ -64,6 +64,7 @@ All settings are under `imagelint.*` namespace:
 
 - `enabled`, `sizeThreshold`, `autoConvertToWebP`, `preferAVIF`
 - `scanOnSave`, `excludePatterns`, `showStatusBar`, `compressionQuality`
+- `diagnostics.enabled`, `diagnostics.severity`, `diagnostics.fileTypes`
 
 ## Commands
 

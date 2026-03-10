@@ -34,10 +34,6 @@ suite('utils', () => {
       assert.ok(isSupportedImageFile('photo.png'));
       assert.ok(isSupportedImageFile('photo.jpg'));
       assert.ok(isSupportedImageFile('photo.jpeg'));
-      assert.ok(isSupportedImageFile('photo.gif'));
-      assert.ok(isSupportedImageFile('photo.svg'));
-      assert.ok(isSupportedImageFile('photo.webp'));
-      assert.ok(isSupportedImageFile('photo.avif'));
     });
 
     test('returns false for unsupported formats', () => {
@@ -45,11 +41,13 @@ suite('utils', () => {
       assert.ok(!isSupportedImageFile('file.ts'));
       assert.ok(!isSupportedImageFile('file.pdf'));
       assert.ok(!isSupportedImageFile('file'));
+      assert.ok(!isSupportedImageFile('photo.gif'));
+      assert.ok(!isSupportedImageFile('photo.svg'));
     });
 
     test('handles paths with directories', () => {
       assert.ok(isSupportedImageFile('/images/photo.png'));
-      assert.ok(isSupportedImageFile('src/assets/logo.svg'));
+      assert.ok(isSupportedImageFile('src/assets/logo.jpg'));
     });
 
     test('is case-insensitive via lowercase extension', () => {

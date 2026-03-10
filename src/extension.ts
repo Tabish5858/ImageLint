@@ -3,7 +3,7 @@ import * as path from 'node:path';
 import * as vscode from 'vscode';
 import { analyzeImages } from './analyzer';
 import { ImageLintCodeActionProvider } from './codeActions';
-import { getConfig } from './config';
+import { DiagnosticSeverityLevel, getConfig } from './config';
 import { DiagnosticsManager } from './diagnostics';
 import { optimizeIssue } from './optimizer';
 import { ReportPanel } from './report';
@@ -35,7 +35,7 @@ async function runScan(showInfoMessage = false): Promise<ScanSummary> {
   const issues = await analyzeImages(imageUris, config);
   latestIssues = issues;
 
-  await diagnosticsManager.setIssues(issues, config.excludePatterns);
+  await diagnosticsManager.setIssues(issues, config.excludePatterns, config.diagnostics);
 
   const summary: ScanSummary = {
     scanned: imageUris.length,
@@ -193,6 +193,31 @@ async function ignoreImage(relativePath: string): Promise<void> {
   await runScan(false);
 }
 
+async function updateDiagnosticSettings(message: {
+  diagnosticsEnabled?: boolean;
+  severity?: string;
+  fileTypes?: string[];
+}): Promise<void> {
+  const cfg = vscode.workspace.getConfiguration('imagelint.diagnostics');
+  const target = vscode.ConfigurationTarget.Global;
+
+  if (typeof message.diagnosticsEnabled === 'boolean') {
+    await cfg.update('enabled', message.diagnosticsEnabled, target);
+  }
+  if (typeof message.severity === 'string') {
+    const valid: DiagnosticSeverityLevel[] = ['error', 'warning', 'information', 'hint'];
+    if (valid.includes(message.severity as DiagnosticSeverityLevel)) {
+      await cfg.update('severity', message.severity, target);
+    }
+  }
+  if (Array.isArray(message.fileTypes)) {
+    await cfg.update('fileTypes', message.fileTypes, target);
+  }
+
+  await runScan(false);
+  reportPanel.sendSettings(getConfig().diagnostics);
+}
+
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
   diagnosticsManager = new DiagnosticsManager();
   statusBar = new StatusBarController();
@@ -206,6 +231,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     } else if (message.type === 'rescan') {
       await runScan(false);
       reportPanel.update(latestIssues);
+    } else if (message.type === 'updateSettings') {
+      await updateDiagnosticSettings(message);
+    } else if (message.type === 'getSettings') {
+      reportPanel.sendSettings(getConfig().diagnostics);
     }
   });
 
