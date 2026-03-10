@@ -1,7 +1,6 @@
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs/promises';
 import * as vscode from 'vscode';
-import { ImageLintConfig } from './config';
 import { ImageIssue } from './types';
 import { formatBytes } from './utils';
 
@@ -9,8 +8,6 @@ interface ReportMessage {
   type: string;
   issueId?: string;
   action?: string;
-  key?: string;
-  value?: unknown;
 }
 
 interface ReportRow {
@@ -60,32 +57,11 @@ export class ReportPanel {
 
     this.panel.reveal(vscode.ViewColumn.Beside);
     this.sendData(issues);
-    // Trigger settings load
-    this.onMessage({ type: 'getSettings' });
   }
 
   update(issues: ImageIssue[]): void {
     if (this.panel) {
       this.sendData(issues);
-    }
-  }
-
-  sendSettings(config: ImageLintConfig): void {
-    if (this.panel) {
-      this.panel.webview.postMessage({
-        type: 'settings',
-        settings: {
-          enabled: config.enabled,
-          sizeThreshold: config.sizeThresholdKB,
-          autoConvertToWebP: config.autoConvertToWebP,
-          preferAVIF: config.preferAVIF,
-          scanOnSave: config.scanOnSave,
-          showStatusBar: config.showStatusBar,
-          compressionQuality: config.compressionQuality,
-          showInlineDiagnostics: config.showInlineDiagnostics,
-          diagnosticSeverity: config.diagnosticSeverity
-        }
-      });
     }
   }
 

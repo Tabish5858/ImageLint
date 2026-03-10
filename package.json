@@ -2,7 +2,7 @@
   "name": "imagelint",
   "displayName": "ImageLint",
   "description": "ESLint for images: detect, report, and fix unoptimized images in your workspace.",
-  "version": "0.3.8",
+  "version": "0.4.0",
   "publisher": "tabishbinishfaq",
   "license": "MIT",
   "repository": {
@@ -115,28 +115,6 @@
           "minimum": 1,
           "maximum": 100,
           "description": "Lossy compression quality (1-100)."
-        },
-        "imagelint.showInlineDiagnostics": {
-          "type": "boolean",
-          "default": true,
-          "description": "Show inline diagnostics (squiggly errors) on code files that reference unoptimized images."
-        },
-        "imagelint.diagnosticSeverity": {
-          "type": "string",
-          "default": "warning",
-          "enum": [
-            "error",
-            "warning",
-            "information",
-            "hint"
-          ],
-          "enumDescriptions": [
-            "Show as errors (red underlines)",
-            "Show as warnings (yellow underlines)",
-            "Show as information (blue underlines)",
-            "Show as hints (subtle dots)"
-          ],
-          "description": "Severity level for inline diagnostics."
         }
       }
     }

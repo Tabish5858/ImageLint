@@ -9,8 +9,6 @@ export interface ImageLintConfig {
   excludePatterns: string[];
   showStatusBar: boolean;
   compressionQuality: number;
-  showInlineDiagnostics: boolean;
-  diagnosticSeverity: 'error' | 'warning' | 'information' | 'hint';
 }
 
 export function getConfig(): ImageLintConfig {
@@ -23,11 +21,6 @@ export function getConfig(): ImageLintConfig {
     scanOnSave: cfg.get<boolean>('scanOnSave', true),
     excludePatterns: cfg.get<string[]>('excludePatterns', ['**/node_modules/**']),
     showStatusBar: cfg.get<boolean>('showStatusBar', true),
-    compressionQuality: cfg.get<number>('compressionQuality', 80),
-    showInlineDiagnostics: cfg.get<boolean>('showInlineDiagnostics', true),
-    diagnosticSeverity: cfg.get<string>(
-      'diagnosticSeverity',
-      'warning'
-    ) as ImageLintConfig['diagnosticSeverity']
+    compressionQuality: cfg.get<number>('compressionQuality', 80)
   };
 }
