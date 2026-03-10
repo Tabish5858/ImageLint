@@ -71,7 +71,7 @@ jobs:
 
       - name: Publish to VS Code Marketplace
         if: steps.check.outputs.skip == 'false'
-        run: vsce publish patch --no-git-tag-version
+        run: vsce publish patch --no-git-tag-version --no-dependencies
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
 
