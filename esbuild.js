@@ -50,17 +50,7 @@ const baseConfig = {
 // or platform dylibs. Copy only the runtime files into dist/node_modules/
 // so the VSIX ships a self-contained dist/ with no top-level node_modules.
 
-const SHARP_RUNTIME_DEPS = [
-  'sharp',
-  'detect-libc',
-  'semver',
-  'color',
-  'color-convert',
-  'color-name',
-  'color-string',
-  'simple-swizzle',
-  'is-arrayish'
-];
+const SHARP_RUNTIME_DEPS = ['sharp', 'detect-libc', 'semver'];
 
 const SKIP_PATTERN = /\.(md|d\.ts|d\.mts|cc|cpp|h|gyp|map)$|^(LICENSE|LICENCE)(\.txt)?$/i;
 const SKIP_DIRS = new Set([
@@ -101,12 +91,13 @@ function copySharpToDist() {
     copyDirFiltered(path.join(nmSrc, dep), path.join(nmDest, dep));
   }
 
-  // Copy @img platform-specific binaries
+  // Copy @img platform-specific binaries + shared @img packages (e.g. @img/colour)
   const imgDir = path.join(nmSrc, '@img');
   if (fs.existsSync(imgDir)) {
     const allowedPrefixes = vsCodeTarget ? TARGET_TO_IMG[vsCodeTarget] : undefined;
     for (const name of fs.readdirSync(imgDir)) {
-      if (allowedPrefixes && !allowedPrefixes.some((p) => name.startsWith(p))) {
+      const isPlatformBinary = name.startsWith('sharp-');
+      if (isPlatformBinary && allowedPrefixes && !allowedPrefixes.some((p) => name.startsWith(p))) {
         continue; // skip binaries not matching the target platform
       }
       copyDirFiltered(path.join(imgDir, name), path.join(nmDest, '@img', name));
