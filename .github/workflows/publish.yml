@@ -7,32 +7,61 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Skip if version bump commit
+        id: check
+        run: |
+          MSG=$(git log -1 --pretty=%s)
+          if [[ "$MSG" == chore:* && "$MSG" == *"bump version"* ]]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Setup Node
+        if: steps.check.outputs.skip == 'false'
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
 
       - name: Install deps
+        if: steps.check.outputs.skip == 'false'
         run: npm ci
 
       - name: Lint
+        if: steps.check.outputs.skip == 'false'
         run: npm run lint
 
       - name: Build
+        if: steps.check.outputs.skip == 'false'
         run: npm run build
 
       - name: Compile tests
+        if: steps.check.outputs.skip == 'false'
         run: npm run compile-tests
 
       - name: Install vsce
+        if: steps.check.outputs.skip == 'false'
         run: npm install -g @vscode/vsce
 
       - name: Publish to VS Code Marketplace
-        run: vsce publish --no-git-tag-version
+        if: steps.check.outputs.skip == 'false'
+        run: vsce publish patch --no-git-tag-version
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
+
+      - name: Push version bump back to repo
+        if: steps.check.outputs.skip == 'false'
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          git commit -m "chore: bump version to v${VERSION}"
+          git push
