@@ -216,6 +216,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       const cfg = vscode.workspace.getConfiguration('imagelint');
       await cfg.update(message.key as string, message.value, vscode.ConfigurationTarget.Global);
       await runScan(false);
+      // Config store may not have propagated yet — enforce diagnostic visibility immediately
+      if (message.key === 'showInlineDiagnostics' && message.value === false) {
+        diagnosticsManager.clearDiagnostics();
+      }
       reportPanel.sendSettings(getConfig());
     }
   });

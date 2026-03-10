@@ -47,6 +47,10 @@ export class DiagnosticsManager {
     this.issueById.clear();
   }
 
+  clearDiagnostics(): void {
+    this.collection.clear();
+  }
+
   getIssueById(id: string): ImageIssue | undefined {
     return this.issueById.get(id);
   }
