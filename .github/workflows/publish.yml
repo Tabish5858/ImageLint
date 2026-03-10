@@ -58,10 +58,11 @@ jobs:
             "darwin-x64:@img/sharp-darwin-x64 @img/sharp-libvips-darwin-x64"
             "linux-x64:@img/sharp-linux-x64 @img/sharp-libvips-linux-x64"
             "linux-arm64:@img/sharp-linux-arm64 @img/sharp-libvips-linux-arm64"
+            "linux-armhf:@img/sharp-linux-arm @img/sharp-libvips-linux-arm"
             "alpine-x64:@img/sharp-linuxmusl-x64 @img/sharp-libvips-linuxmusl-x64"
             "alpine-arm64:@img/sharp-linuxmusl-arm64 @img/sharp-libvips-linuxmusl-arm64"
-            "win32-x64:@img/sharp-win32-x64"
-            "win32-arm64:@img/sharp-win32-arm64"
+            "win32-x64:@img/sharp-win32-x64 @img/sharp-libvips-win32-x64"
+            "win32-arm64:@img/sharp-win32-arm64 @img/sharp-libvips-win32-arm64"
           )
 
           for entry in "${TARGETS[@]}"; do
