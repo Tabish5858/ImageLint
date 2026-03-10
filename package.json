@@ -166,7 +166,10 @@
     "watch": "node esbuild.js --watch",
     "lint": "eslint src",
     "test": "npm run build && npm run compile-tests && node ./out/test/runTest.js",
-    "compile-tests": "tsc -p ./test/tsconfig.json"
+    "compile-tests": "tsc -p ./test/tsconfig.json",
+    "package": "vsce package",
+    "package:target": "node scripts/package-platforms.js",
+    "install:sharp-all": "npm install --force --no-save @img/sharp-darwin-arm64 @img/sharp-darwin-x64 @img/sharp-linux-x64 @img/sharp-linux-arm64 @img/sharp-linuxmusl-x64 @img/sharp-linuxmusl-arm64 @img/sharp-win32-x64 @img/sharp-win32-ia32 @img/sharp-libvips-darwin-arm64 @img/sharp-libvips-darwin-x64 @img/sharp-libvips-linux-x64 @img/sharp-libvips-linux-arm64 @img/sharp-libvips-linuxmusl-x64 @img/sharp-libvips-linuxmusl-arm64"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",
@@ -175,6 +178,7 @@
     "@typescript-eslint/eslint-plugin": "^8.25.0",
     "@typescript-eslint/parser": "^8.25.0",
     "@vscode/test-electron": "^2.4.1",
+    "@vscode/vsce": "^3.2.2",
     "esbuild": "^0.25.0",
     "eslint": "^9.21.0",
     "eslint-config-prettier": "^10.1.1",

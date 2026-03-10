@@ -1,10 +1,10 @@
+import { execFile } from 'node:child_process';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
-import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import * as vscode from 'vscode';
 import sharp from 'sharp';
 import { optimize as optimizeSvg } from 'svgo';
+import * as vscode from 'vscode';
 import { ImageLintConfig } from './config';
 import { ImageIssue, OptimizationAction, OptimizationResult } from './types';
 
@@ -14,7 +14,11 @@ async function fileSize(filePath: string): Promise<number> {
   return (await fs.stat(filePath)).size;
 }
 
-async function optimizeRasterInPlace(filePath: string, ext: string, quality: number): Promise<void> {
+async function optimizeRasterInPlace(
+  filePath: string,
+  ext: string,
+  quality: number
+): Promise<void> {
   const pipeline = sharp(filePath, { animated: ext === '.gif' });
 
   if (ext === '.png') {
@@ -40,22 +44,44 @@ async function optimizeSvgInPlace(filePath: string): Promise<void> {
   await fs.writeFile(filePath, result.data, 'utf8');
 }
 
-async function optimizeGifInPlace(filePath: string): Promise<void> {
-  const tmpPath = `${filePath}.tmp.gif`;
+async function optimizeGifWithGifsicle(filePath: string, tmpPath: string): Promise<boolean> {
   try {
     await execFileAsync('gifsicle', ['-O3', filePath, '-o', tmpPath]);
+    return true;
   } catch (err) {
     const isNotFound =
       err instanceof Error &&
       ('code' in err ? (err as NodeJS.ErrnoException).code === 'ENOENT' : false);
     if (isNotFound) {
-      throw new Error(
-        'gifsicle is not installed or not found in PATH. Install it via your package manager (e.g. "brew install gifsicle" or "apt-get install gifsicle") and reload the window.'
-      );
+      return false;
     }
     throw err;
   }
-  await fs.rename(tmpPath, filePath);
+}
+
+async function optimizeGifInPlace(filePath: string): Promise<void> {
+  const tmpPath = `${filePath}.tmp.gif`;
+
+  // Try gifsicle first (best GIF optimization)
+  const gifsicleWorked = await optimizeGifWithGifsicle(filePath, tmpPath);
+  if (gifsicleWorked) {
+    await fs.rename(tmpPath, filePath);
+    return;
+  }
+
+  // Fallback: use sharp for basic GIF recompression
+  try {
+    await sharp(filePath, { animated: true }).gif({ effort: 10 }).toFile(tmpPath);
+    await fs.rename(tmpPath, filePath);
+  } catch {
+    throw new Error(
+      'GIF optimization failed. For best results, install gifsicle:\n' +
+        '  macOS:    brew install gifsicle\n' +
+        '  Linux:    sudo apt install gifsicle  (or yum/pacman equivalent)\n' +
+        '  Windows:  choco install gifsicle  (via Chocolatey) or scoop install gifsicle\n' +
+        'Then reload VS Code.'
+    );
+  }
 }
 
 async function convertToModern(
@@ -73,7 +99,11 @@ async function convertToModern(
   return targetPath;
 }
 
-async function resizeWidthInPlace(filePath: string, targetWidth: number, quality: number): Promise<void> {
+async function resizeWidthInPlace(
+  filePath: string,
+  targetWidth: number,
+  quality: number
+): Promise<void> {
   const ext = path.extname(filePath).toLowerCase();
   const pipeline = sharp(filePath).resize({ width: targetWidth, withoutEnlargement: true });
 

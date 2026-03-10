@@ -243,7 +243,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     await runScan(false);
   });
 
+  const configWatcher = vscode.workspace.onDidChangeConfiguration(async (e) => {
+    if (e.affectsConfiguration('imagelint')) {
+      await runScan(false);
+    }
+  });
+
   context.subscriptions.push(
+    configWatcher,
     diagnosticsManager,
     statusBar,
     watcher,

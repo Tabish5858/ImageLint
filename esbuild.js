@@ -4,6 +4,35 @@ const path = require('path');
 
 const watch = process.argv.includes('--watch');
 
+// ── VS Code platform target (for platform-specific VSIX builds) ─────
+// Pass --vscode-target=<target> to copy only the matching @img/sharp binary.
+// Supported targets: win32-x64, linux-x64, linux-arm64, darwin-x64, darwin-arm64
+// If omitted, copies ALL installed @img binaries (universal / dev build).
+const targetArg = process.argv.find((a) => a.startsWith('--vscode-target='));
+const vsCodeTarget = targetArg ? targetArg.split('=')[1] : undefined;
+
+// Map VS Code targets → @img/ package name prefixes (includes libvips)
+const TARGET_TO_IMG = {
+  'win32-x64': ['sharp-win32-x64'],
+  'win32-ia32': ['sharp-win32-ia32'],
+  'linux-x64': [
+    'sharp-linux-x64',
+    'sharp-linuxmusl-x64',
+    'sharp-libvips-linux-x64',
+    'sharp-libvips-linuxmusl-x64'
+  ],
+  'linux-arm64': [
+    'sharp-linux-arm64',
+    'sharp-linuxmusl-arm64',
+    'sharp-libvips-linux-arm64',
+    'sharp-libvips-linuxmusl-arm64'
+  ],
+  'darwin-x64': ['sharp-darwin-x64', 'sharp-libvips-darwin-x64'],
+  'darwin-arm64': ['sharp-darwin-arm64', 'sharp-libvips-darwin-arm64'],
+  'alpine-x64': ['sharp-linuxmusl-x64', 'sharp-libvips-linuxmusl-x64'],
+  'alpine-arm64': ['sharp-linuxmusl-arm64', 'sharp-libvips-linuxmusl-arm64']
+};
+
 const baseConfig = {
   entryPoints: ['src/extension.ts'],
   bundle: true,
@@ -71,15 +100,20 @@ function copySharpToDist() {
     copyDirFiltered(path.join(nmSrc, dep), path.join(nmDest, dep));
   }
 
-  // Copy @img platform-specific binaries (whatever is installed)
+  // Copy @img platform-specific binaries
   const imgDir = path.join(nmSrc, '@img');
   if (fs.existsSync(imgDir)) {
+    const allowedPrefixes = vsCodeTarget ? TARGET_TO_IMG[vsCodeTarget] : undefined;
     for (const name of fs.readdirSync(imgDir)) {
+      if (allowedPrefixes && !allowedPrefixes.some((p) => name.startsWith(p))) {
+        continue; // skip binaries not matching the target platform
+      }
       copyDirFiltered(path.join(imgDir, name), path.join(nmDest, '@img', name));
     }
   }
 
-  console.log('  Copied sharp native deps → dist/node_modules/');
+  const label = vsCodeTarget || 'all installed platforms';
+  console.log(`  Copied sharp native deps (${label}) → dist/node_modules/`);
 }
 
 // ── main ────────────────────────────────────────────────────────────
