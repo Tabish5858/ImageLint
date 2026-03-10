@@ -13,6 +13,8 @@ prompt.txt
 esbuild.js
 tsconfig.json
 test.html
+test-output.log
+scripts/**
 ForVideo/**
 *.vsix
 **/*.ts

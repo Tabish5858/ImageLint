@@ -72,7 +72,8 @@ const SKIP_DIRS = new Set([
   'examples',
   '.github',
   'bin',
-  'install'
+  'install',
+  'node_modules'
 ]);
 
 function copyDirFiltered(src, dest) {

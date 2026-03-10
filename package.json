@@ -2,7 +2,7 @@
   "name": "imagelint",
   "displayName": "ImageLint",
   "description": "ESLint for images: detect, report, and fix unoptimized images in your workspace.",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "publisher": "tabishbinishfaq",
   "license": "MIT",
   "repository": {
@@ -167,8 +167,9 @@
     "lint": "eslint src",
     "test": "npm run build && npm run compile-tests && node ./out/test/runTest.js",
     "compile-tests": "tsc -p ./test/tsconfig.json",
-    "package": "vsce package",
+    "package": "vsce package --no-dependencies",
     "package:target": "node scripts/package-platforms.js",
+    "publish:platforms": "node scripts/package-platforms.js && node scripts/publish-platforms.js",
     "install:sharp-all": "npm install --force --no-save @img/sharp-darwin-arm64 @img/sharp-darwin-x64 @img/sharp-linux-x64 @img/sharp-linux-arm64 @img/sharp-linuxmusl-x64 @img/sharp-linuxmusl-arm64 @img/sharp-win32-x64 @img/sharp-win32-ia32 @img/sharp-libvips-darwin-arm64 @img/sharp-libvips-darwin-x64 @img/sharp-libvips-linux-x64 @img/sharp-libvips-linux-arm64 @img/sharp-libvips-linuxmusl-x64 @img/sharp-libvips-linuxmusl-arm64"
   },
   "devDependencies": {
