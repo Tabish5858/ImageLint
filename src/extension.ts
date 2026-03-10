@@ -228,7 +228,9 @@ async function updateDiagnosticSettings(message: {
   fileTypes?: string[];
 }): Promise<void> {
   const cfg = vscode.workspace.getConfiguration('imagelint.diagnostics');
-  const target = vscode.ConfigurationTarget.Global;
+  const target = vscode.workspace.workspaceFolders?.length
+    ? vscode.ConfigurationTarget.Workspace
+    : vscode.ConfigurationTarget.Global;
 
   if (typeof message.diagnosticsEnabled === 'boolean') {
     await cfg.update('enabled', message.diagnosticsEnabled, target);

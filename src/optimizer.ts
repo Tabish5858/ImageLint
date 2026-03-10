@@ -20,21 +20,29 @@ async function optimizeRasterInPlace(
   quality: number
 ): Promise<void> {
   const buf = await fs.readFile(filePath);
-  const pipeline = sharp(buf, { animated: ext === '.gif' });
+  const sharpOpts = ext === '.gif' ? { animated: true } : {};
+  const tmpPath = filePath + '.tmp';
 
   if (ext === '.png') {
-    await pipeline.png({ quality, compressionLevel: 9, palette: true }).toFile(filePath + '.tmp');
+    try {
+      await sharp(buf, sharpOpts)
+        .png({ quality, compressionLevel: 9, palette: true })
+        .toFile(tmpPath);
+    } catch {
+      // Palette quantisation can fail on certain images; fall back to lossless compression
+      await sharp(buf, sharpOpts).png({ compressionLevel: 9 }).toFile(tmpPath);
+    }
   } else if (ext === '.jpg' || ext === '.jpeg') {
-    await pipeline.jpeg({ quality, mozjpeg: true }).toFile(filePath + '.tmp');
+    await sharp(buf, sharpOpts).jpeg({ quality, mozjpeg: true }).toFile(tmpPath);
   } else if (ext === '.webp') {
-    await pipeline.webp({ quality }).toFile(filePath + '.tmp');
+    await sharp(buf, sharpOpts).webp({ quality }).toFile(tmpPath);
   } else if (ext === '.avif') {
-    await pipeline.avif({ quality }).toFile(filePath + '.tmp');
+    await sharp(buf, sharpOpts).avif({ quality }).toFile(tmpPath);
   } else {
     return;
   }
 
-  await fs.rename(filePath + '.tmp', filePath);
+  await fs.rename(tmpPath, filePath);
 }
 
 async function optimizeSvgInPlace(filePath: string): Promise<void> {
@@ -92,11 +100,10 @@ async function convertToModern(
 ): Promise<string> {
   const targetPath = sourcePath.replace(/\.[^.]+$/, ext);
   const buf = await fs.readFile(sourcePath);
-  const image = sharp(buf);
   if (ext === '.webp') {
-    await image.webp({ quality }).toFile(targetPath);
+    await sharp(buf).webp({ quality }).toFile(targetPath);
   } else {
-    await image.avif({ quality }).toFile(targetPath);
+    await sharp(buf).avif({ quality }).toFile(targetPath);
   }
   return targetPath;
 }
@@ -108,21 +115,29 @@ async function resizeWidthInPlace(
 ): Promise<void> {
   const ext = path.extname(filePath).toLowerCase();
   const buf = await fs.readFile(filePath);
-  const pipeline = sharp(buf).resize({ width: targetWidth, withoutEnlargement: true });
+  const resizeOpts = { width: targetWidth, withoutEnlargement: true };
+  const tmpPath = filePath + '.tmp';
 
   if (ext === '.png') {
-    await pipeline.png({ quality, compressionLevel: 9, palette: true }).toFile(filePath + '.tmp');
+    try {
+      await sharp(buf)
+        .resize(resizeOpts)
+        .png({ quality, compressionLevel: 9, palette: true })
+        .toFile(tmpPath);
+    } catch {
+      await sharp(buf).resize(resizeOpts).png({ compressionLevel: 9 }).toFile(tmpPath);
+    }
   } else if (ext === '.jpg' || ext === '.jpeg') {
-    await pipeline.jpeg({ quality, mozjpeg: true }).toFile(filePath + '.tmp');
+    await sharp(buf).resize(resizeOpts).jpeg({ quality, mozjpeg: true }).toFile(tmpPath);
   } else if (ext === '.webp') {
-    await pipeline.webp({ quality }).toFile(filePath + '.tmp');
+    await sharp(buf).resize(resizeOpts).webp({ quality }).toFile(tmpPath);
   } else if (ext === '.avif') {
-    await pipeline.avif({ quality }).toFile(filePath + '.tmp');
+    await sharp(buf).resize(resizeOpts).avif({ quality }).toFile(tmpPath);
   } else {
-    await pipeline.toFile(filePath + '.tmp');
+    await sharp(buf).resize(resizeOpts).toFile(tmpPath);
   }
 
-  await fs.rename(filePath + '.tmp', filePath);
+  await fs.rename(tmpPath, filePath);
 }
 
 export async function optimizeIssue(
@@ -132,7 +147,7 @@ export async function optimizeIssue(
 ): Promise<OptimizationResult> {
   const sourcePath = issue.uri.fsPath;
   const ext = path.extname(sourcePath).toLowerCase();
-  const quality = Math.max(1, Math.min(100, config.compressionQuality));
+  const quality = Math.round(Math.max(1, Math.min(100, Number(config.compressionQuality) || 80)));
   const originalBytes = await fileSize(sourcePath);
   let outputPath = sourcePath;
 

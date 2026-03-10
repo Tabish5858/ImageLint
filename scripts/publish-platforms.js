@@ -40,13 +40,27 @@ if (dryRun) {
 
 console.log('');
 
+const failed = [];
+const succeeded = [];
+
 for (const f of vsixFiles) {
   console.log(`── Publishing ${f} ──`);
-  execSync(`npx vsce publish --packagePath ${f} --no-dependencies`, {
-    cwd: root,
-    stdio: 'inherit'
-  });
-  console.log(`✓ ${f} published\n`);
+  try {
+    execSync(`npx vsce publish --packagePath ${f} --no-dependencies`, {
+      cwd: root,
+      stdio: 'inherit'
+    });
+    succeeded.push(f);
+    console.log(`✓ ${f} published\n`);
+  } catch {
+    failed.push(f);
+    console.error(`✗ ${f} failed to publish\n`);
+  }
 }
 
-console.log(`── All ${vsixFiles.length} VSIX(es) published ──`);
+console.log(`── Done: ${succeeded.length} published, ${failed.length} failed ──`);
+if (failed.length > 0) {
+  console.error('\nFailed:');
+  for (const f of failed) console.error(`  - ${f}`);
+  process.exit(1);
+}
