@@ -17,6 +17,7 @@ let diagnosticsManager: DiagnosticsManager;
 let statusBar: StatusBarController;
 let reportPanel: ReportPanel;
 let watcher: ScanWatcher;
+let outputChannel: vscode.OutputChannel;
 let latestIssues: ImageIssue[] = [];
 
 const CODE_GLOB = '**/*.{js,jsx,ts,tsx,html,css,scss,vue,svelte,md,mdx}';
@@ -110,6 +111,11 @@ async function applyFixById(issueId: string, action: OptimizationAction): Promis
     await runScan(false);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown optimization error';
+    outputChannel.appendLine(`[optimize] Failed: ${message}`);
+    if (error instanceof Error && error.stack) {
+      outputChannel.appendLine(error.stack);
+    }
+    outputChannel.show(true);
     vscode.window.showErrorMessage(`ImageLint optimization failed: ${message}`);
   }
 }
@@ -161,7 +167,23 @@ async function optimizeAllIssues(): Promise<void> {
         await fs.unlink(result.originalUri.fsPath);
       }
       fixed++;
-    } catch {
+    } catch (err) {
+      // If convert-modern failed, try fallback to compress
+      const action = getBestAction(issue);
+      if (action === 'convert-modern') {
+        try {
+          await optimizeIssue(issue, 'compress', config);
+          fixed++;
+          continue;
+        } catch (fallbackErr) {
+          const msg = fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr);
+          outputChannel.appendLine(
+            `[optimize] Failed ${issue.relativePath} (compress fallback): ${msg}`
+          );
+        }
+      }
+      const msg = err instanceof Error ? err.message : String(err);
+      outputChannel.appendLine(`[optimize] Failed ${issue.relativePath}: ${msg}`);
       failed++;
     }
   }
@@ -174,9 +196,16 @@ async function optimizeAllIssues(): Promise<void> {
     parts.push(`${failed} failed`);
   }
   await runScan(false);
-  vscode.window.showInformationMessage(
-    `ImageLint: ${parts.join(', ')}. ${latestIssues.length} issues remaining.`
-  );
+  if (failed > 0) {
+    outputChannel.show(true);
+    vscode.window.showWarningMessage(
+      `ImageLint: ${parts.join(', ')}. ${latestIssues.length} issues remaining. See Output → ImageLint for details.`
+    );
+  } else {
+    vscode.window.showInformationMessage(
+      `ImageLint: ${parts.join(', ')}. ${latestIssues.length} issues remaining.`
+    );
+  }
 }
 
 async function ignoreImage(relativePath: string): Promise<void> {
@@ -219,6 +248,7 @@ async function updateDiagnosticSettings(message: {
 }
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
+  outputChannel = vscode.window.createOutputChannel('ImageLint');
   diagnosticsManager = new DiagnosticsManager();
   statusBar = new StatusBarController();
   reportPanel = new ReportPanel(context.extensionUri, async (message) => {
@@ -250,6 +280,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   });
 
   context.subscriptions.push(
+    outputChannel,
     configWatcher,
     diagnosticsManager,
     statusBar,

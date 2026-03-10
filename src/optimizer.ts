@@ -19,7 +19,8 @@ async function optimizeRasterInPlace(
   ext: string,
   quality: number
 ): Promise<void> {
-  const pipeline = sharp(filePath, { animated: ext === '.gif' });
+  const buf = await fs.readFile(filePath);
+  const pipeline = sharp(buf, { animated: ext === '.gif' });
 
   if (ext === '.png') {
     await pipeline.png({ quality, compressionLevel: 9, palette: true }).toFile(filePath + '.tmp');
@@ -90,7 +91,8 @@ async function convertToModern(
   quality: number
 ): Promise<string> {
   const targetPath = sourcePath.replace(/\.[^.]+$/, ext);
-  const image = sharp(sourcePath);
+  const buf = await fs.readFile(sourcePath);
+  const image = sharp(buf);
   if (ext === '.webp') {
     await image.webp({ quality }).toFile(targetPath);
   } else {
@@ -105,7 +107,8 @@ async function resizeWidthInPlace(
   quality: number
 ): Promise<void> {
   const ext = path.extname(filePath).toLowerCase();
-  const pipeline = sharp(filePath).resize({ width: targetWidth, withoutEnlargement: true });
+  const buf = await fs.readFile(filePath);
+  const pipeline = sharp(buf).resize({ width: targetWidth, withoutEnlargement: true });
 
   if (ext === '.png') {
     await pipeline.png({ quality, compressionLevel: 9, palette: true }).toFile(filePath + '.tmp');

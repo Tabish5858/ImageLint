@@ -5,6 +5,8 @@ import { DiagnosticsConfig, DiagnosticSeverityLevel } from './config';
 import { ImageIssue } from './types';
 import { escapeRegExp, toPosixPath } from './utils';
 
+const ALWAYS_EXCLUDED = ['**/node_modules/**', '**/.git/**', '**/.vscode-test/**'];
+
 function buildCodeGlob(fileTypes: string[]): string {
   if (fileTypes.length === 0) {
     return '';
@@ -72,14 +74,20 @@ export class DiagnosticsManager {
     }
 
     const codeGlob = buildCodeGlob(diagConfig.fileTypes);
-    const excludeGlob = excludePatterns.length > 0 ? `{${excludePatterns.join(',')}}` : undefined;
+    const allExcludes = [...new Set([...ALWAYS_EXCLUDED, ...excludePatterns])];
+    const excludeGlob = `{${allExcludes.join(',')}}`;
     const codeFiles = await vscode.workspace.findFiles(codeGlob, excludeGlob);
 
     const severity = toVscodeSeverity(diagConfig.severity);
     const diagnosticsByFile = new Map<string, vscode.Diagnostic[]>();
 
     for (const fileUri of codeFiles) {
-      const text = await fs.readFile(fileUri.fsPath, 'utf8');
+      let text: string;
+      try {
+        text = await fs.readFile(fileUri.fsPath, 'utf8');
+      } catch {
+        continue; // skip unreadable files (binary, permissions, etc.)
+      }
       for (const issue of issues) {
         const normalizedRef = toPosixPath(issue.relativePath);
         const basename = path.basename(issue.relativePath);
