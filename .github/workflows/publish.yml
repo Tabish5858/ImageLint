@@ -34,32 +34,9 @@ jobs:
         if: steps.check.outputs.skip == 'false'
         run: npm ci
 
-      - name: Install sharp for all platforms
-        if: steps.check.outputs.skip == 'false'
-        run: |
-          npm install --no-save --force --ignore-scripts \
-            @img/sharp-darwin-arm64 \
-            @img/sharp-darwin-x64 \
-            @img/sharp-linux-arm64 \
-            @img/sharp-linux-x64 \
-            @img/sharp-linuxmusl-arm64 \
-            @img/sharp-linuxmusl-x64 \
-            @img/sharp-win32-ia32 \
-            @img/sharp-win32-x64 \
-            @img/sharp-libvips-darwin-arm64 \
-            @img/sharp-libvips-darwin-x64 \
-            @img/sharp-libvips-linux-arm64 \
-            @img/sharp-libvips-linux-x64 \
-            @img/sharp-libvips-linuxmusl-arm64 \
-            @img/sharp-libvips-linuxmusl-x64
-
       - name: Lint
         if: steps.check.outputs.skip == 'false'
         run: npm run lint
-
-      - name: Build
-        if: steps.check.outputs.skip == 'false'
-        run: npm run build
 
       - name: Compile tests
         if: steps.check.outputs.skip == 'false'
@@ -69,9 +46,37 @@ jobs:
         if: steps.check.outputs.skip == 'false'
         run: npm install -g @vscode/vsce
 
-      - name: Publish to VS Code Marketplace
+      - name: Bump patch version
         if: steps.check.outputs.skip == 'false'
-        run: vsce publish patch --no-git-tag-version --no-dependencies
+        run: npm version patch --no-git-tag-version
+
+      - name: Package for each platform
+        if: steps.check.outputs.skip == 'false'
+        run: |
+          TARGETS=(
+            "darwin-arm64:@img/sharp-darwin-arm64 @img/sharp-libvips-darwin-arm64"
+            "darwin-x64:@img/sharp-darwin-x64 @img/sharp-libvips-darwin-x64"
+            "linux-x64:@img/sharp-linux-x64 @img/sharp-libvips-linux-x64"
+            "linux-arm64:@img/sharp-linux-arm64 @img/sharp-libvips-linux-arm64"
+            "alpine-x64:@img/sharp-linuxmusl-x64 @img/sharp-libvips-linuxmusl-x64"
+            "alpine-arm64:@img/sharp-linuxmusl-arm64 @img/sharp-libvips-linuxmusl-arm64"
+            "win32-x64:@img/sharp-win32-x64"
+            "win32-ia32:@img/sharp-win32-ia32"
+          )
+
+          for entry in "${TARGETS[@]}"; do
+            target="${entry%%:*}"
+            pkgs="${entry#*:}"
+            echo "=== Packaging for $target ==="
+            rm -rf node_modules/@img dist/node_modules
+            npm install --no-save --force --ignore-scripts $pkgs
+            npm run build
+            vsce package --target "$target" --no-dependencies --no-git-tag-version -o "imagelint-${target}.vsix"
+          done
+
+      - name: Publish all platform packages
+        if: steps.check.outputs.skip == 'false'
+        run: vsce publish --packagePath *.vsix --no-dependencies
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
 
