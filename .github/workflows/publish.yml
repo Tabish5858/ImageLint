@@ -37,7 +37,7 @@ jobs:
       - name: Install sharp for all platforms
         if: steps.check.outputs.skip == 'false'
         run: |
-          npm install --no-save \
+          npm install --no-save --force --ignore-scripts \
             @img/sharp-darwin-arm64 \
             @img/sharp-darwin-x64 \
             @img/sharp-linux-arm64 \
