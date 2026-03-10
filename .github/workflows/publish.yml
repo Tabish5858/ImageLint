@@ -34,6 +34,25 @@ jobs:
         if: steps.check.outputs.skip == 'false'
         run: npm ci
 
+      - name: Install sharp for all platforms
+        if: steps.check.outputs.skip == 'false'
+        run: |
+          npm install --no-save \
+            @img/sharp-darwin-arm64 \
+            @img/sharp-darwin-x64 \
+            @img/sharp-linux-arm64 \
+            @img/sharp-linux-x64 \
+            @img/sharp-linuxmusl-arm64 \
+            @img/sharp-linuxmusl-x64 \
+            @img/sharp-win32-ia32 \
+            @img/sharp-win32-x64 \
+            @img/sharp-libvips-darwin-arm64 \
+            @img/sharp-libvips-darwin-x64 \
+            @img/sharp-libvips-linux-arm64 \
+            @img/sharp-libvips-linux-x64 \
+            @img/sharp-libvips-linuxmusl-arm64 \
+            @img/sharp-libvips-linuxmusl-x64
+
       - name: Lint
         if: steps.check.outputs.skip == 'false'
         run: npm run lint
