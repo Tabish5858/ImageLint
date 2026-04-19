@@ -1,0 +1,93 @@
+name: Bug report
+description: Report a reproducible bug or regression
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking the time to report a bug.
+
+  - type: input
+    id: summary
+    attributes:
+      label: Summary
+      description: One-line description of the issue
+      placeholder: ImageLint shows diagnostics for unsupported SVG files
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction steps
+      description: Share exact, minimal steps to reproduce
+      placeholder: |
+        1. Open project ...
+        2. Run ImageLint: Scan Workspace
+        3. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / diagnostics (optional)
+      description: Paste relevant logs, stack traces, or screenshots
+      render: shell
+
+  - type: textarea
+    id: additionalContext
+    attributes:
+      label: Additional context
+      description: Related settings, workspace layout, or recent dependency updates
+
+  - type: input
+    id: extensionVersion
+    attributes:
+      label: ImageLint version
+      placeholder: 0.5.6
+    validations:
+      required: true
+
+  - type: input
+    id: vscodeVersion
+    attributes:
+      label: Editor version (VS Code/Cursor)
+      placeholder: 1.111.0
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: OS
+      placeholder: macOS 14.7 / Ubuntu 24.04 / Windows 11
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Confirmation
+      options:
+        - label: I searched existing issues and did not find a duplicate.
+          required: true
+        - label: I included enough details to reproduce the issue.
+          required: true
+        - label: I am not reporting a private security vulnerability in this public issue.
+          required: true

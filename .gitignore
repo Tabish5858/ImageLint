@@ -7,3 +7,4 @@ coverage/
 prompt.txt
 .vscode-test
 repo-hardner.txt
+test-output.log

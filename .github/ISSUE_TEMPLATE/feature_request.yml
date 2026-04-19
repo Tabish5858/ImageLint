@@ -1,0 +1,56 @@
+name: Feature request
+description: Suggest an improvement or new capability
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for sharing an idea to improve ImageLint.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: What problem are you trying to solve?
+      placeholder: In large workspaces I cannot quickly prioritize high-impact images.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the desired behavior and workflow
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Other approaches or workarounds you evaluated
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope and impact
+      description: Affected commands, settings, file types, or UX
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria (optional)
+      description: Clear criteria that define when the feature is complete
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Confirmation
+      options:
+        - label: I searched existing issues and did not find a duplicate.
+          required: true
+        - label: This request aligns with ImageLint's goal of image optimization quality.
+          required: true
+        - label: I understand this request may be scoped or declined to protect maintainability.
+          required: true

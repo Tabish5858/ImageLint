@@ -1,0 +1,8 @@
+# Default code owner for repository reviews
+
+- @Tabish5858
+
+# Security and automation ownership
+
+/.github/workflows/ @Tabish5858
+/SECURITY.md @Tabish5858

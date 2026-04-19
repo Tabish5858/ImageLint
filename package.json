@@ -9,7 +9,7 @@
     "type": "git",
     "url": "https://github.com/Tabish5858/ImageLint"
   },
-  "icon": "icon.png",
+  "icon": "docs/screenshots/icon.png",
   "engines": {
     "vscode": "^1.75.0"
   },
