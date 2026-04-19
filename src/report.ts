@@ -41,14 +41,16 @@ export class ReportPanel {
 
   async show(issues: ImageIssue[]): Promise<void> {
     this.pendingIssues = issues;
+    const preferredColumn = this.getPreferredColumn();
 
     if (!this.panel) {
       this.panel = vscode.window.createWebviewPanel(
         'imagelint.report',
         'ImageLint Audit Report',
-        vscode.ViewColumn.Beside,
+        preferredColumn,
         {
           enableScripts: true,
+          retainContextWhenHidden: true,
           localResourceRoots: [vscode.Uri.joinPath(this.extensionUri, 'webview')]
         }
       );
@@ -69,6 +71,12 @@ export class ReportPanel {
         this.onMessage(message);
       });
 
+      this.panel.onDidChangeViewState((event) => {
+        if (event.webviewPanel.visible) {
+          this.flushPendingMessages();
+        }
+      });
+
       try {
         this.panel.webview.html = await this.getHtml(this.panel.webview);
       } catch (error) {
@@ -76,10 +84,20 @@ export class ReportPanel {
           error instanceof Error ? error.message : 'Unable to load the ImageLint report view.';
         this.panel.webview.html = this.getErrorHtml(message);
       }
+    } else {
+      this.panel.reveal(this.panel.viewColumn ?? preferredColumn, false);
     }
 
-    this.panel.reveal(vscode.ViewColumn.Beside);
     this.flushPendingMessages();
+  }
+
+  private getPreferredColumn(): vscode.ViewColumn {
+    return (
+      vscode.window.activeTextEditor?.viewColumn ??
+      vscode.window.visibleTextEditors.find((editor) => editor.viewColumn !== undefined)
+        ?.viewColumn ??
+      vscode.ViewColumn.One
+    );
   }
 
   update(issues: ImageIssue[]): void {
