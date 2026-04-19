@@ -172,6 +172,9 @@
     "package": "npm run preflight && vsce package --no-dependencies",
     "package:target": "npm run preflight && node scripts/package-platforms.js",
     "publish:platforms": "npm run preflight && node scripts/package-platforms.js && node scripts/publish-platforms.js",
+    "publish:openvsx": "node scripts/publish-openvsx.js",
+    "publish:openvsx:dry": "node scripts/publish-openvsx.js --dry-run",
+    "publish:all": "npm run preflight && node scripts/package-platforms.js && node scripts/publish-platforms.js && node scripts/publish-openvsx.js",
     "install:sharp-all": "npm install --force --no-save @img/sharp-darwin-arm64@0.34.5 @img/sharp-darwin-x64@0.34.5 @img/sharp-linux-x64@0.34.5 @img/sharp-linux-arm64@0.34.5 @img/sharp-linuxmusl-x64@0.34.5 @img/sharp-linuxmusl-arm64@0.34.5 @img/sharp-win32-x64@0.34.5 @img/sharp-win32-ia32@0.34.5 @img/sharp-libvips-darwin-arm64@1.2.4 @img/sharp-libvips-darwin-x64@1.2.4 @img/sharp-libvips-linux-x64@1.2.4 @img/sharp-libvips-linux-arm64@1.2.4 @img/sharp-libvips-linuxmusl-x64@1.2.4 @img/sharp-libvips-linuxmusl-arm64@1.2.4"
   },
   "devDependencies": {
@@ -187,6 +190,7 @@
     "eslint-config-prettier": "^10.1.1",
     "glob": "^11.0.1",
     "mocha": "^11.1.0",
+    "ovsx": "^0.10.9",
     "prettier": "^3.5.2",
     "typescript": "^5.8.2",
     "vscode-test": "^1.4.1"
