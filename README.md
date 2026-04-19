@@ -1,6 +1,6 @@
 # ImageLint
 
-![ImageLint logo](docs/screenshots/icon.png)
+![ImageLint logo](docs/screenshots/icon.avif)
 
 [![CI](https://github.com/Tabish5858/ImageLint/actions/workflows/ci.yml/badge.svg)](https://github.com/Tabish5858/ImageLint/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/Tabish5858/ImageLint/actions/workflows/codeql.yml/badge.svg)](https://github.com/Tabish5858/ImageLint/actions/workflows/codeql.yml)
