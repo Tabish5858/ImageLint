@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { ImageLintConfig } from './config';
 import { isSupportedImageFile } from './utils';
 
-const IMAGE_GLOB = '**/*.{png,jpg,jpeg}';
+const IMAGE_GLOB = '**/*.{png,jpg,jpeg,gif,svg,webp,avif}';
 const ALWAYS_EXCLUDED = ['**/node_modules/**', '**/.git/**', '**/.vscode-test/**'];
 
 export async function scanWorkspaceForImages(config: ImageLintConfig): Promise<vscode.Uri[]> {

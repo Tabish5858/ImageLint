@@ -30,6 +30,9 @@ interface ReportRow {
 
 export class ReportPanel {
   private panel: vscode.WebviewPanel | undefined;
+  private webviewReady = false;
+  private pendingIssues: ImageIssue[] = [];
+  private pendingSettings: DiagnosticsConfig | undefined;
 
   constructor(
     private readonly extensionUri: vscode.Uri,
@@ -37,6 +40,8 @@ export class ReportPanel {
   ) {}
 
   async show(issues: ImageIssue[]): Promise<void> {
+    this.pendingIssues = issues;
+
     if (!this.panel) {
       this.panel = vscode.window.createWebviewPanel(
         'imagelint.report',
@@ -47,35 +52,59 @@ export class ReportPanel {
           localResourceRoots: [vscode.Uri.joinPath(this.extensionUri, 'webview')]
         }
       );
+      this.webviewReady = false;
 
       this.panel.onDidDispose(() => {
         this.panel = undefined;
+        this.webviewReady = false;
+        this.pendingSettings = undefined;
       });
 
       this.panel.webview.onDidReceiveMessage((message: ReportMessage) => {
+        if (message.type === 'ready') {
+          this.webviewReady = true;
+          this.flushPendingMessages();
+          return;
+        }
         this.onMessage(message);
       });
 
-      this.panel.webview.html = await this.getHtml(this.panel.webview);
+      try {
+        this.panel.webview.html = await this.getHtml(this.panel.webview);
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : 'Unable to load the ImageLint report view.';
+        this.panel.webview.html = this.getErrorHtml(message);
+      }
     }
 
     this.panel.reveal(vscode.ViewColumn.Beside);
-    this.sendData(issues);
+    this.flushPendingMessages();
   }
 
   update(issues: ImageIssue[]): void {
-    if (this.panel) {
-      this.sendData(issues);
-    }
+    this.pendingIssues = issues;
+    this.flushPendingMessages();
   }
 
   sendSettings(diagConfig: DiagnosticsConfig): void {
-    if (this.panel) {
+    this.pendingSettings = diagConfig;
+    this.flushPendingMessages();
+  }
+
+  private flushPendingMessages(): void {
+    if (!this.panel || !this.webviewReady) {
+      return;
+    }
+
+    this.sendData(this.pendingIssues);
+
+    if (this.pendingSettings) {
       this.panel.webview.postMessage({
         type: 'settingsData',
-        diagnosticsEnabled: diagConfig.enabled,
-        severity: diagConfig.severity,
-        fileTypes: diagConfig.fileTypes
+        diagnosticsEnabled: this.pendingSettings.enabled,
+        severity: this.pendingSettings.severity,
+        fileTypes: this.pendingSettings.fileTypes
       });
     }
   }
@@ -142,5 +171,53 @@ export class ReportPanel {
 
   private getNonce(): string {
     return crypto.randomBytes(16).toString('hex');
+  }
+
+  private getErrorHtml(errorMessage: string): string {
+    const escapedMessage = errorMessage
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+
+    return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body {
+        margin: 0;
+        padding: 20px;
+        font-family: var(--vscode-font-family, sans-serif);
+        font-size: var(--vscode-font-size, 13px);
+        color: var(--vscode-editor-foreground, #cccccc);
+        background: var(--vscode-editor-background, #1e1e1e);
+      }
+
+      h1 {
+        font-size: 16px;
+        margin: 0 0 10px;
+      }
+
+      p {
+        margin: 0;
+        color: var(--vscode-descriptionForeground, #999999);
+      }
+
+      code {
+        display: inline-block;
+        margin-top: 12px;
+        color: var(--vscode-terminal-ansiRed, #f14c4c);
+      }
+    </style>
+  </head>
+  <body>
+    <h1>ImageLint Report Failed to Load</h1>
+    <p>The audit report could not be initialized. Try re-running <strong>ImageLint: Show Audit Report</strong>.</p>
+    <code>${escapedMessage}</code>
+  </body>
+</html>`;
   }
 }

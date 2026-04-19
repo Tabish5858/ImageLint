@@ -328,5 +328,8 @@ function applySettingsData(msg) {
   renderFileTypeChips();
 }
 
+/* Notify extension host that the webview can receive messages */
+vscode.postMessage({ type: 'ready' });
+
 /* Request current settings on load */
 vscode.postMessage({ type: 'getSettings' });
