@@ -2,14 +2,14 @@
   "name": "imagelint",
   "displayName": "ImageLint",
   "description": "ESLint for images: detect, report, and fix unoptimized images in your workspace.",
-  "version": "0.5.7",
+  "version": "0.5.8",
   "publisher": "tabishbinishfaq",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/Tabish5858/ImageLint"
   },
-  "icon": "docs/screenshots/icon.png",
+  "icon": "docs/screenshots/icon.avif",
   "engines": {
     "vscode": "^1.75.0"
   },
